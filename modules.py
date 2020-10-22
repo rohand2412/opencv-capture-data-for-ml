@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import datetime
 
 class DirectoryManagement:
     def __init__(self, targetDir):
@@ -71,3 +72,37 @@ class DirectoryManagement:
                 print("MostRecentDir: name: " + str(self._name))
                 print("MostRecentDir: num: " + str(self._num))
                 print("MostRecentDir: text: " + str(self._text))
+
+class FPS:
+    def __init__(self):
+        self._elapsedTimes = np.array([])
+        self._MS_TO_SECONDS = 1.0/1000000.0
+    
+    def openTimer(self):
+        self._startTime = datetime.datetime.now()
+    
+    def closeTimer(self):
+        self._endTime = datetime.datetime.now()
+        self._elapsedTimes = np.append(self._elapsedTimes, self._endTime - self._startTime)
+        return self._elapsedTimes[-1]
+    
+    def calculate(self):
+        self._elapsedTimes = np.delete(self._elapsedTimes, [0])
+        self._mean = np.mean(self._elapsedTimes)
+        self._secondsPerFrame = self._mean.microseconds * self._MS_TO_SECONDS
+        self._fps = 1.0/self._secondsPerFrame
+    
+    def getFPS(self):
+        return self._fps
+
+    def printFPS(self):
+        print("FPS: " + str(self._fps))
+    
+    def debug(self, debug):
+        if debug:
+            print("startTime: " + str(self._startTime))
+            print("endTime: " + str(self._endTime))
+            print("elapsedTimes: " + str(self._elapsedTimes))
+            print("mean: " + str(self._mean))
+            print("secondsPerFrame: " + str(self._secondsPerFrame))
+            print("fps: " + str(self._fps))

@@ -6,23 +6,21 @@ import modules
 
 cap = cv2.VideoCapture(0)
 
-imgs = modules.DirectoryManagement(r'/home/pi/Documents/Images/')
-imgs.setFirstDirName("Test0")
-imgs.add()
-imgs.debug(True)
+imgDir = modules.DirectoryManagement(r'/home/pi/Documents/Images/')
+imgDir.setFirstDirName("Test0")
+imgDir.add()
+imgDir.debug(False)
 
-while(True):
-    pass
+fps = modules.FPS()
 
 limitOfImgs = 30
-elapsed_times = np.array([])
 width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
 height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
 side = 300
 frameNum = 1
 
 while(cap.isOpened()):
-    start_time = datetime.datetime.now()
+    fps.openTimer()
     
     ret, frame = cap.read()
 
@@ -39,13 +37,13 @@ while(cap.isOpened()):
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
     
-    end_time = datetime.datetime.now()
-    elapsed_times = np.append(elapsed_times, end_time - start_time)
-    print(elapsed_times[frameNum-1])
+    fps.closeTimer()
 
     frameNum += 1
 
-print("FPS: " + str(1.0/(np.mean(np.delete(elapsed_times, [0]))).seconds))
+fps.calculate()
+fps.debug(False)
+fps.printFPS()
 
 cap.release()
 cv2.destroyAllWindows()
