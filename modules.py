@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import datetime
+import cv2
 
 class DirectoryManagement:
     def __init__(self, targetDir):
@@ -106,3 +107,42 @@ class FPS:
             print("mean: " + str(self._mean))
             print("secondsPerFrame: " + str(self._secondsPerFrame))
             print("fps: " + str(self._fps))
+
+class Frame:
+    def __init__(self, side, name, filename, limitOfFrames=None):
+        self._name = name
+        self._filename = filename
+        self._cap = cv2.VideoCapture(0)
+        self._width = self._cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+        self._height = self._cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        self._side = side
+        self._limitOfFrames = limitOfFrames
+        self._frameNum = 1
+        self._frameBuffer = np.array([])
+    
+    def captureFrame(self):
+        self._ret, self._frame = self._cap.read()
+    
+    def preprocessing(self):
+        self._frame = cv2.flip(self._frame, 1)
+        self._frame = self._frame[int((self._height-self._side)/2):
+                                  int((self._height+self._side)/2), 
+                                  int((self._width-self._side)/2):
+                                  int((self._width+self._side)/2)]
+        self._frameBuffer = np.append(self._frameBuffer, self._frame)
+    
+    def imshow(self):
+        cv2.imshow(self._name, self._frame)
+    
+    def update(self):
+        if self._limitOfFrames:
+            if self._frameNum >= self._limitOfFrames:
+                break
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+        self._frameNum += 1
+    
+    def exportBuffer(self):
+        for frame in self._frameBuffer:
+            index = int(np.where(self._frameBuffer == frame)[0][0])
+            cv2.imwrite(self._filename + str(index+1) + ".jpg", frame)
