@@ -1,10 +1,5 @@
 import cv2
-import datetime
-import numpy as np
-import os
 import modules
-
-cap = cv2.VideoCapture(0)
 
 imgDir = modules.DirectoryManagement(r'/home/pi/Documents/Images/')
 imgDir.setFirstDirName("Test0")
@@ -13,37 +8,25 @@ imgDir.debug(False)
 
 fps = modules.FPS()
 
-limitOfImgs = 30
-width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-side = 300
-frameNum = 1
+frame = modules.Frame(0, 300, "Cam", "img", 30)
 
-while(cap.isOpened()):
-    fps.openTimer()
-    
-    ret, frame = cap.read()
+try:
+    while(frame.getCap().isOpened()):
+        fps.openTimer()
+        
+        frame.captureFrame()
+        frame.preprocessing()
+        frame.imshow()
+        frame.update()
+        
+        fps.closeTimer()
 
-    frame = cv2.flip(frame, 1)
+except modules.Break:
+    frame.getCap().release()
+    cv2.destroyAllWindows()
 
-    frame = frame[int((height-side)/2):int((height+side)/2), int((width-side)/2):int((width+side)/2)]
+    fps.calculate()
+    fps.debug(False)
+    fps.printFPS()
 
-    cv2.imshow('frame', frame)
-    cv2.imwrite("img" + str(frameNum) + ".jpg", frame)
-
-    if frameNum >= limitOfImgs:
-        break
-
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-    
-    fps.closeTimer()
-
-    frameNum += 1
-
-fps.calculate()
-fps.debug(False)
-fps.printFPS()
-
-cap.release()
-cv2.destroyAllWindows()
+    frame.exportBuffer()

@@ -3,6 +3,8 @@ import numpy as np
 import datetime
 import cv2
 
+class Break(Exception): pass
+
 class DirectoryManagement:
     def __init__(self, targetDir):
         self._targetDir = targetDir
@@ -109,16 +111,16 @@ class FPS:
             print("fps: " + str(self._fps))
 
 class Frame:
-    def __init__(self, side, name, filename, limitOfFrames=None):
+    def __init__(self, index, side, name, filename, limitOfFrames=None):
         self._name = name
         self._filename = filename
-        self._cap = cv2.VideoCapture(0)
+        self._cap = cv2.VideoCapture(index)
         self._width = self._cap.get(cv2.CAP_PROP_FRAME_WIDTH)
         self._height = self._cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
         self._side = side
         self._limitOfFrames = limitOfFrames
         self._frameNum = 1
-        self._frameBuffer = np.array([])
+        self._frameBuffer = []
     
     def captureFrame(self):
         self._ret, self._frame = self._cap.read()
@@ -129,7 +131,7 @@ class Frame:
                                   int((self._height+self._side)/2), 
                                   int((self._width-self._side)/2):
                                   int((self._width+self._side)/2)]
-        self._frameBuffer = np.append(self._frameBuffer, self._frame)
+        self._frameBuffer.append(self._frame)
     
     def imshow(self):
         cv2.imshow(self._name, self._frame)
@@ -137,12 +139,36 @@ class Frame:
     def update(self):
         if self._limitOfFrames:
             if self._frameNum >= self._limitOfFrames:
-                break
+                raise Break
         if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+            raise Break
         self._frameNum += 1
     
     def exportBuffer(self):
-        for frame in self._frameBuffer:
-            index = int(np.where(self._frameBuffer == frame)[0][0])
-            cv2.imwrite(self._filename + str(index+1) + ".jpg", frame)
+        self._frameBuffer = np.array(self._frameBuffer)
+        for index in range(len(self._frameBuffer)):
+            cv2.imwrite(self._filename + str(index+1) + ".jpg", self._frameBuffer[index])
+    
+    def getName(self):
+        return self._name
+    
+    def getFilename(self):
+        return self._filename
+    
+    def getCap(self):
+        return self._cap
+    
+    def getWidth(self):
+        return self._width
+    
+    def getHeight(self):
+        return self._height
+    
+    def getSide(self):
+        return self._side
+    
+    def getLimitOfFrames(self):
+        return self._limitOfFrames
+    
+    def getFrameNum(self):
+        return self._frameNum
