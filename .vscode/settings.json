@@ -1,0 +1,8 @@
+{
+    "files.autoSave": "onFocusChange",
+    "editor.codeActionsOnSave": {},
+    "python.linting.pylintArgs": ["--generated-members=cv2.*"],
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true,
+    "python.linting.pylintUseMinimalCheckers": false
+}
