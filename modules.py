@@ -20,12 +20,15 @@ class DirectoryManagement:
         self._most_recent_dir = self._MostRecentDir()
         self._new_folder = None
         os.chdir(target_dir)
+
     def get_target_dir(self):
         """Returns the directory that this class with manage"""
         return self._target_dir
+
     def get_first_dir_name(self):
         """Returns the first directory that was made in the target directory"""
         return self._first_dir_name
+
     def add(self):
         """Follows naming conventions of the first directory and adds another one"""
         self._names = os.listdir(self.get_target_dir())
@@ -51,12 +54,14 @@ class DirectoryManagement:
             print("nums: " + str(self._nums))
             self._most_recent_dir.debug(True)
             print("newFolder: " + str(self._new_folder))
+
     class _MostRecentDir:
         def __init__(self):
             self._index = None
             self._name = None
             self._num = None
             self._text = None
+
         def calculate(self, names, nums):
             """Calculates data on the most recent directory from the names and numbers of all of
             them"""
@@ -65,18 +70,23 @@ class DirectoryManagement:
             self._name = names[self._index]
             self._num = int(''.join(filter(str.isdigit, self._name)))
             self._text = ''.join(filter(str.isalpha, self._name))
+
         def get_index(self):
             """Returns the index of the most recent directory"""
             return self._index
+
         def get_name(self):
             """Returns the name of the most recent directory"""
             return self._name
+
         def get_num(self):
             """Returns the number of the most recent directory"""
             return self._num
+
         def get_text(self):
             """Returns the text of the most recent directory"""
             return self._text
+
         def debug(self, debug):
             """Prints out values of all variables for debugging"""
             if debug:
@@ -95,26 +105,32 @@ class Fps:
         self._mean = None
         self._seconds_per_frame = None
         self._fps = None
+
     def open_timer(self):
         """Starts timer that determines the elapsed time"""
         self._start_time = datetime.datetime.now()
+
     def close_timer(self):
         """Stops timer that determines the elapsed time"""
         self._end_time = datetime.datetime.now()
         self._elapsed_times = np.append(self._elapsed_times, self._end_time - self._start_time)
         return self._elapsed_times[-1]
+
     def calculate(self):
         """Calculates the fps based upon a series of stats"""
         self._elapsed_times = np.delete(self._elapsed_times, [0])
         self._mean = np.mean(self._elapsed_times)
         self._seconds_per_frame = self._mean.microseconds * self._ms_to_seconds
         self._fps = 1.0/self._seconds_per_frame
+
     def get_fps(self):
         """Returns fps"""
         return self._fps
+
     def print_fps(self):
         """Prints out just fps"""
         print("FPS: " + str(self._fps))
+
     def debug(self, debug):
         """Prints out values of all variables for debugging"""
         if debug:
@@ -127,21 +143,27 @@ class Fps:
 
 class Frame:
     """Keeps track of all data regarding the video stream"""
-    def __init__(self, index, side, name, filename, limit_of_frames=None):
+    def __init__(self, video_capture_index, side, name, filename, limit_of_frames=None):
         self._name = name
         self._filename = filename
-        self._cap = cv2.VideoCapture(index)
+        self._cap = cv2.VideoCapture(video_capture_index)
         self._width = self._cap.get(cv2.CAP_PROP_FRAME_WIDTH)
         self._height = self._cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
         self._side = side
         self._limit_of_frames = limit_of_frames
         self._num = 1
-        self._buffer = []
         self._ret = None
         self._frame = None
+
+        if self._limit_of_frames:
+            self._buffer = [None for i in range(self.get_limit_of_frames())]
+        else:
+            self._buffer = []
+
     def capture_frame(self):
         """Reads the frame from the video stream"""
         self._ret, self._frame = self._cap.read()
+
     def preprocessing(self):
         """Preprocesses the frame"""
         self._frame = cv2.flip(self._frame, 1)
@@ -149,10 +171,16 @@ class Frame:
                                   int((self._height+self._side)/2),
                                   int((self._width-self._side)/2):
                                   int((self._width+self._side)/2)]
-        self._buffer.append(self._frame)
+
+        if self._limit_of_frames:
+            self._buffer[self._num-1] = self._frame
+        else:
+            self._buffer.append(self._frame)
+
     def imshow(self):
         """Displays the frame"""
         cv2.imshow(self._name, self._frame)
+
     def update(self):
         """Checks certain break conditions and updates certain variables"""
         if self._limit_of_frames:
@@ -161,32 +189,41 @@ class Frame:
         if cv2.waitKey(1) & 0xFF == ord('q'):
             raise Break
         self._num += 1
+
     def export_buffer(self):
         """Saves all the frames from the video stream using a consistent naming convention"""
         self._buffer = np.array(self._buffer)
         for index in range(len(self._buffer)):
             cv2.imwrite(self._filename + str(index+1) + ".jpg", self._buffer[index])
+
     def get_name(self):
         """Returns name of the camera"""
         return self._name
+
     def get_filename(self):
         """Returns filename for saving frames"""
         return self._filename
+
     def get_cap(self):
         """Returns video stream object"""
         return self._cap
+
     def get_width(self):
         """Returns raw width of frame"""
         return self._width
+
     def get_height(self):
         """Returns raw height of frame"""
         return self._height
+
     def get_side(self):
         """Returns cropped square side length"""
         return self._side
+
     def get_limit_of_frames(self):
         """Returns limit of frames for the video stream"""
         return self._limit_of_frames
+
     def get_num(self):
         """Returns running number of current frames"""
         return self._num
