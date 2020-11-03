@@ -170,10 +170,10 @@ class Frame:
     def preprocessing(self):
         """Preprocesses the frame"""
         self._frame = cv2.flip(self._frame, 1)
-        self._frame = self._frame[int((self._width-self._side)/2):
-                                  int((self._width+self._side)/2),
-                                  int((self._height-self._side)/2):
-                                  int((self._height+self._side)/2)]
+        self._frame = self._frame[int((self._height-self._side)/2):
+                                  int((self._height+self._side)/2),
+                                  int((self._width-self._side)/2):
+                                  int((self._width+self._side)/2)]
 
         if self._limit_of_frames:
             self._buffer[self._num-1] = self._frame

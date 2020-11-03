@@ -13,7 +13,7 @@ def main():
 
     fps = modules.Fps()
 
-    frame = modules.Frame(side=300, name="Cam", filename="img", limit_of_frames=30)
+    frame = modules.Frame(side=300, name="Cam", filename="img", limit_of_frames=180)
 
     try:
         while True:
