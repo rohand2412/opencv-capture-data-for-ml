@@ -3,8 +3,10 @@
 
 import os
 import datetime
+import time
 import numpy as np
 import cv2
+from imutils.video.pivideostream import PiVideoStream
 
 class Break(Exception):
     """Emulates a break from within a function"""
@@ -143,12 +145,13 @@ class Fps:
 
 class Frame:
     """Keeps track of all data regarding the video stream"""
-    def __init__(self, video_capture_index, side, name, filename, limit_of_frames=None):
+    def __init__(self, side, name, filename, limit_of_frames=None):
+        self._width = 640
+        self._height = 480
+        self._camera = PiVideoStream(resolution=(self._width, self._height)).start()
+        time.sleep(2.0)
         self._name = name
         self._filename = filename
-        self._cap = cv2.VideoCapture(video_capture_index)
-        self._width = self._cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-        self._height = self._cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
         self._side = side
         self._limit_of_frames = limit_of_frames
         self._num = 1
@@ -162,15 +165,15 @@ class Frame:
 
     def capture_frame(self):
         """Reads the frame from the video stream"""
-        self._ret, self._frame = self._cap.read()
+        self._frame = self._camera.read()
 
     def preprocessing(self):
         """Preprocesses the frame"""
         self._frame = cv2.flip(self._frame, 1)
-        self._frame = self._frame[int((self._height-self._side)/2):
-                                  int((self._height+self._side)/2),
-                                  int((self._width-self._side)/2):
-                                  int((self._width+self._side)/2)]
+        self._frame = self._frame[int((self._width-self._side)/2):
+                                  int((self._width+self._side)/2),
+                                  int((self._height-self._side)/2):
+                                  int((self._height+self._side)/2)]
 
         if self._limit_of_frames:
             self._buffer[self._num-1] = self._frame
@@ -204,9 +207,9 @@ class Frame:
         """Returns filename for saving frames"""
         return self._filename
 
-    def get_cap(self):
+    def get_camera(self):
         """Returns video stream object"""
-        return self._cap
+        return self._camera
 
     def get_width(self):
         """Returns raw width of frame"""

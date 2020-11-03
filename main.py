@@ -13,20 +13,20 @@ def main():
 
     fps = modules.Fps()
 
-    frame = modules.Frame(video_capture_index=0, side=300, name="Cam", filename="img",
-                          limit_of_frames=30)
+    frame = modules.Frame(side=300, name="Cam", filename="img", limit_of_frames=30)
 
     try:
-        while frame.get_cap().isOpened():
+        while True:
             fps.open_timer()
             frame.capture_frame()
             frame.preprocessing()
             frame.imshow()
             frame.update()
-            fps.close_timer()
+
+            print(fps.close_timer())
 
     except modules.Break:
-        frame.get_cap().release()
+        frame.get_camera().stop()
         cv2.destroyAllWindows()
 
         fps.calculate()
