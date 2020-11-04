@@ -6,8 +6,8 @@ import modules
 
 def main():
     """Main code"""
-    img_dir = modules.DirectoryManagement(target_dir=r'/home/pi/Documents/Images/',
-                                          first_dir_name="Test0")
+    img_dir = modules.DirectoryManagement.WriteDir(target_dir=r'/home/pi/Documents/Images/',
+                                                   first_dir_name="Test0")
     img_dir.add()
     img_dir.debug(False)
 
