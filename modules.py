@@ -7,6 +7,8 @@ import time
 import numpy as np
 import cv2
 from imutils.video.pivideostream import PiVideoStream
+import pynput
+import copy
 
 class Break(Exception):
     """Emulates a break from within a function"""
@@ -284,3 +286,64 @@ class Frame:
     def get_num(self):
         """Returns running number of current frames"""
         return self._num
+
+class Keyboard:
+    def __init__(self):
+        self._len_event_buffers = 32
+        self._pressed = self._Buffer(self._len_event_buffers)
+        self._released = self._Buffer(self._len_event_buffers)
+
+    def _on_press(self, key):
+        self._pressed.log_events(key)
+
+    def _on_release(self, key):
+        self._released.log_events(key)
+
+    def start(self):
+        self._listener = pynput.keyboard.Listener(on_press=self._on_press,
+                                                  on_release=self._on_release)
+        self._listener.start()
+
+    def stop(self):
+        self._listener.stop()
+
+    def empty_buffers(self):
+        self._pressed.empty_events()
+        self._released.empty_events()
+    
+    def get_pressed(self, empty_buffer=False):
+        return self._pressed.return_events(empty_buffer)
+    
+    def get_released(self, empty_buffer=False):
+        return self._released.return_events(empty_buffer)
+
+    class _Buffer:
+        def __init__(self, len_event_buffers):
+            self._buffer = np.array([None for i in range(len_event_buffers)])
+            self._len = 0
+
+        def log_events(self, key):
+            self._buffer[self._len] = key
+            if self._len == len(self._buffer)-1:
+                self._buffer[0] = None
+                self._buffer = np.roll(self._buffer, -1)
+            else:
+                self._len += 1
+
+        def empty_events(self):
+            self._buffer[:] = None
+            self._len = 0
+        
+        def return_events(self, empty_buffer):
+            if empty_buffer:
+                original_self = copy.deepcopy(self)
+                self.empty_events()
+                return original_self
+            else:
+                return self
+
+        def get_buffer(self):
+            return copy.deepcopy(self._buffer)
+
+        def get_len(self):
+            return self._len
