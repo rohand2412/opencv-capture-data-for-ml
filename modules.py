@@ -312,38 +312,84 @@ class Keyboard:
         self._released.empty_events()
     
     def get_pressed(self, empty_buffer=False):
-        return self._pressed.return_events(empty_buffer)
+        pressed = self._pressed.return_events(empty_buffer)
+        pressed = self._Buffer(self._len_event_buffers, pressed[0], pressed[1])
+        return pressed
     
     def get_released(self, empty_buffer=False):
-        return self._released.return_events(empty_buffer)
+        released = self._released.return_events(empty_buffer)
+        released = self._Buffer(self._len_event_buffers, released[0], released[1])
+        return released
 
     class _Buffer:
-        def __init__(self, len_event_buffers):
-            self._buffer = np.array([None for i in range(len_event_buffers)])
-            self._len = 0
+        def __init__(self, len_event_buffers, set_buf=None, set_len=None):
+            self._in_method_flag = False
+            if isinstance(set_buf, np.ndarray):
+                self._buffer = set_buf
+            else:
+                self._buffer = np.array([None for i in range(len_event_buffers)])
+            if set_len:
+                self._len = set_len
+            else:
+                self._len = 0
+            # print("init -- ", self._len, " --ID: ", id(self))
 
         def log_events(self, key):
+            while self._in_method_flag:
+                pass
+            self._in_method_flag = True
             self._buffer[self._len] = key
             if self._len == len(self._buffer)-1:
                 self._buffer[0] = None
                 self._buffer = np.roll(self._buffer, -1)
             else:
+                print("Added one more to len -- ", key, end=" -- ")
+                print(self._buffer[:5], end=" -- ")
                 self._len += 1
+                print(self._len, " --ID: ", id(self))
+            self._in_method_flag = False
 
         def empty_events(self):
             self._buffer[:] = None
             self._len = 0
-        
+            # print("ee -- ", self._len, " --ID: ", id(self))
+
         def return_events(self, empty_buffer):
+            while self._in_method_flag:
+                pass
+            self._in_method_flag = True
             if empty_buffer:
-                original_self = copy.deepcopy(self)
+                if not (self._len == 0):
+                    print("self_before -- ", end="")
+                    print(self._buffer[:5], end=" -- ")
+                    print(self._len)
+                #store copy
+                original_self = [copy.deepcopy(self._buffer), copy.deepcopy(self._len)]
+                if not (original_self[1] == 0):
+                    print("original_self_before -- ", end="")
+                    print(original_self[0][:5], end=" -- ")
+                    print(original_self[1])
+                    print("self_before:len -- ", self._len, " :buf -- ", self._buffer[:5])
+                    print("self_before:bufID --", id(self))
+                #clear
                 self.empty_events()
+                if not (self._len == 0):
+                    print("self_after -- ", end="")
+                    print(self._buffer[:5], end=" -- ")
+                    print(self._len)
+                if not (original_self[1] == 0):
+                    print("original_self_after -- ", end="")
+                    print(original_self[0][:5], end=" -- ")
+                    print(original_self[1])
+                self._in_method_flag = False
+                #return copy
                 return original_self
             else:
+                self._in_method_flag = False
                 return self
 
         def get_buffer(self):
-            return copy.deepcopy(self._buffer)
+            return self._buffer.copy()
 
         def get_len(self):
             return self._len
