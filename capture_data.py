@@ -2,18 +2,18 @@
 """This script rapidly capture images and stores them for later labeling and usage as data"""
 
 import cv2
-import modules
+from capture_data_utils import CaptureData
 
 def main():
     """Main code"""
-    img_dir = modules.DirectoryManagement.WriteDir(target_dir=r'/home/pi/Documents/Images/',
+    img_dir = CaptureData.DirectoryManagement.WriteDir(target_dir=r'/home/pi/Documents/Images/',
                                                    first_dir_name="Test0")
     img_dir.add()
     img_dir.debug(False)
 
-    fps = modules.Fps()
+    fps = CaptureData.Fps()
 
-    frame = modules.Frame(side=300, name="Cam", filename="img", limit_of_frames=180)
+    frame = CaptureData.Frame(side=300, name="Cam", filename="img", limit_of_frames=180)
 
     try:
         while True:
@@ -23,9 +23,11 @@ def main():
             frame.imshow()
             frame.update()
 
+            CaptureData.check_for_quit_request()
+
             print(fps.close_timer())
 
-    except modules.Break:
+    except CaptureData.Break:
         frame.get_camera().stop()
         cv2.destroyAllWindows()
 

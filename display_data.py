@@ -3,13 +3,14 @@
 
 import pynput
 import modules
+from modules import ModulesPackage
 import time
 import datetime
 
 def main():
     """Main code"""
     print(datetime.datetime.now())
-    keyboard = modules.Keyboard()
+    keyboard = ModulesPackage.Keyboard()
     print(datetime.datetime.now())
     keyboard.start()
     print(datetime.datetime.now())
