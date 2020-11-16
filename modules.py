@@ -10,6 +10,8 @@ from imutils.video.pivideostream import PiVideoStream
 import pynput
 import copy
 
+KEYBOARD_BUFFER_INDEX_OF_VAL = 0
+
 class Break(Exception):
     """Emulates a break from within a function"""
 
@@ -289,6 +291,7 @@ class Frame:
 
 class Keyboard:
     def __init__(self):
+        self._listener = None
         self._len_event_buffers = 32
         self._pressed = self._Buffer(self._len_event_buffers)
         self._released = self._Buffer(self._len_event_buffers)
@@ -306,90 +309,85 @@ class Keyboard:
 
     def stop(self):
         self._listener.stop()
-
-    def empty_buffers(self):
-        self._pressed.empty_events()
-        self._released.empty_events()
     
-    def get_pressed(self, empty_buffer=False):
-        pressed = self._pressed.return_events(empty_buffer)
-        pressed = self._Buffer(self._len_event_buffers, pressed[0], pressed[1])
+    def get_pressed(self):
+        pressed = copy.deepcopy(self._pressed)
+        self._pressed.just_returned_events()
         return pressed
     
-    def get_released(self, empty_buffer=False):
-        released = self._released.return_events(empty_buffer)
-        released = self._Buffer(self._len_event_buffers, released[0], released[1])
+    def get_released(self):
+        released = copy.deepcopy(self._released)
+        self._released.just_returned_events()
         return released
+    
+    def get_len_event_buffers(self):
+        return self._len_event_buffers
 
     class _Buffer:
-        def __init__(self, len_event_buffers, set_buf=None, set_len=None):
-            self._in_method_flag = False
-            if isinstance(set_buf, np.ndarray):
-                self._buffer = set_buf
-            else:
-                self._buffer = np.array([None for i in range(len_event_buffers)])
-            if set_len:
-                self._len = set_len
-            else:
-                self._len = 0
-            # print("init -- ", self._len, " --ID: ", id(self))
+        def __init__(self, len_event_buffers):
+            self._just_returned_events = False
+            self._len_event_buffers = len_event_buffers
+            self._buffer = np.array([None for i in range(self._len_event_buffers)])
+            self._len = 0
+            self._write_index = [0]
+            self._read_index = [0]
+            self._event_count = [0]
 
         def log_events(self, key):
-            while self._in_method_flag:
-                pass
-            self._in_method_flag = True
-            self._buffer[self._len] = key
-            if self._len == len(self._buffer)-1:
-                self._buffer[0] = None
-                self._buffer = np.roll(self._buffer, -1)
-            else:
-                print("Added one more to len -- ", key, end=" -- ")
-                print(self._buffer[:5], end=" -- ")
-                self._len += 1
-                print(self._len, " --ID: ", id(self))
-            self._in_method_flag = False
+            if self._event_count[KEYBOARD_BUFFER_INDEX_OF_VAL] == self._len_event_buffers:
+                while True:
+                    print("[ERROR] BUFFER OVERFLOW")
+            self._buffer[self._write_index[KEYBOARD_BUFFER_INDEX_OF_VAL]] = key
+            self.increment_write_index()
+            print("Logging events")
+            self.increment_event_count()
+
+            # if self._just_returned_events:
+            #     self.empty_events()
+            #     self._just_returned_events = False
+            
+            # self._buffer[self._len] = key
+            # if self._len == len(self._buffer)-1:
+            #     self._buffer[0] = None
+            #     self._buffer = np.roll(self._buffer, -1)
+            # else:
+            #     print("Added one more to len -- ", key, end=" -- ")
+            #     print(self._buffer[:5], end=" -- ")
+            #     self._len += 1
+            #     print(self._len, " --ID: ", id(self))
 
         def empty_events(self):
             self._buffer[:] = None
             self._len = 0
-            # print("ee -- ", self._len, " --ID: ", id(self))
+            print("ee")
 
-        def return_events(self, empty_buffer):
-            while self._in_method_flag:
-                pass
-            self._in_method_flag = True
-            if empty_buffer:
-                if not (self._len == 0):
-                    print("self_before -- ", end="")
-                    print(self._buffer[:5], end=" -- ")
-                    print(self._len)
-                #store copy
-                original_self = [copy.deepcopy(self._buffer), copy.deepcopy(self._len)]
-                if not (original_self[1] == 0):
-                    print("original_self_before -- ", end="")
-                    print(original_self[0][:5], end=" -- ")
-                    print(original_self[1])
-                    print("self_before:len -- ", self._len, " :buf -- ", self._buffer[:5])
-                    print("self_before:bufID --", id(self))
-                #clear
-                self.empty_events()
-                if not (self._len == 0):
-                    print("self_after -- ", end="")
-                    print(self._buffer[:5], end=" -- ")
-                    print(self._len)
-                if not (original_self[1] == 0):
-                    print("original_self_after -- ", end="")
-                    print(original_self[0][:5], end=" -- ")
-                    print(original_self[1])
-                self._in_method_flag = False
-                #return copy
-                return original_self
-            else:
-                self._in_method_flag = False
-                return self
+        def just_returned_events(self):
+            self._just_returned_events = True
+        
+        def increment_write_index(self):
+            self._write_index[KEYBOARD_BUFFER_INDEX_OF_VAL] = (self._write_index[KEYBOARD_BUFFER_INDEX_OF_VAL] + 1) % self._len_event_buffers
+        
+        def increment_read_index(self):
+            self._read_index[KEYBOARD_BUFFER_INDEX_OF_VAL] = (self._read_index[KEYBOARD_BUFFER_INDEX_OF_VAL] + 1) % self._len_event_buffers
+        
+        def increment_event_count(self):
+            self._event_count[KEYBOARD_BUFFER_INDEX_OF_VAL] += 1
+            print("Incremented event count -- ", self._event_count[KEYBOARD_BUFFER_INDEX_OF_VAL])
+        
+        def decrement_event_count(self):
+            self._event_count[KEYBOARD_BUFFER_INDEX_OF_VAL] -= 1
+        
+        def get_write_index(self):
+            return self._write_index
+        
+        def get_read_index(self):
+            return self._read_index
+        
+        def get_event_count(self):
+            return self._event_count
 
         def get_buffer(self):
-            return self._buffer.copy()
+            return self._buffer
 
         def get_len(self):
             return self._len

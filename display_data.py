@@ -18,22 +18,37 @@ def main():
         # pressed = keyboard.get_pressed(True)
         # released = keyboard.get_pressed(True)
 
-        pressed = keyboard.get_pressed(True)
+        index_of_val = modules.KEYBOARD_BUFFER_INDEX_OF_VAL
+        pressed = keyboard.get_pressed()
         pressed_buffer = pressed.get_buffer()
         pressed_len = pressed.get_len()
-        released = keyboard.get_released(True)
+        pressed_read_index = pressed.get_read_index()
+        pressed_event_count = pressed.get_event_count()
+        released = keyboard.get_released()
         released_buffer = released.get_buffer()
         released_len = released.get_len()
+        released_read_index = released.get_read_index()
+        released_event_count = released.get_event_count()
 
-        for i in range(pressed_len):
+        while not (pressed_event_count[index_of_val] == 0):
+            print("pressed_event_count -- ", pressed_event_count[index_of_val])
+
+            event = pressed_buffer[pressed_read_index[index_of_val]]
+            pressed.increment_read_index()
+            pressed.decrement_event_count()
             try:
-                print("the {} was pressed".format(pressed_buffer[i].name))
+                print("the {} was pressed -- {}".format(event.name, pressed_event_count[index_of_val]))
             except AttributeError:
                 print(pressed_buffer)
                 while True: pass
-        for i in range(released_len):
+        while not (released_event_count[index_of_val] == 0):
+            print("released_event_count -- ", released_event_count[index_of_val])
+
+            event = released_buffer[released_read_index[index_of_val]]
+            released.increment_read_index()
+            released.decrement_event_count()
             try:
-                print("the {} was released".format(released_buffer[i].name))
+                print("the {} was released -- {}".format(event.name, released_event_count[index_of_val]))
             except AttributeError:
                 print(released_buffer)
                 while True: pass
