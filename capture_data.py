@@ -7,7 +7,7 @@ from capture_data_utils import CaptureData
 def main():
     """Main code"""
     img_dir = CaptureData.DirectoryManagement.WriteDir(target_dir=r'/home/pi/Documents/Images/',
-                                                   first_dir_name="Test0")
+                                                       first_dir_name="Test0")
     img_dir.add()
     img_dir.debug(False)
 
