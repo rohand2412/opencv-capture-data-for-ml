@@ -1,11 +1,11 @@
 #!usr/bin/env python3
 """This script will display the data in the form of a slideshow"""
 
-from modules import ModulesPackage
+from display_data_utils import DisplayData
 
 def main():
     """Main code"""
-    keyboard = ModulesPackage.Keyboard()
+    keyboard = DisplayData.Keyboard()
     keyboard.start()
 
     while True:

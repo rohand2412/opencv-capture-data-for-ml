@@ -277,10 +277,7 @@ class ModulesPackage:
             self._events.put(self._Item(name, key), block=False)
 
         def consume(self):
-            """Iterates through event queue and consumes each key indiviidually"""
-            while not self._events.empty():
-                event = self._events.get()
-                print("{} {}".format(event.get_name(), event.get_key().name))
+            """Consumes keys in the events queue"""
 
         def get_events(self):
             """Returns events queue"""
