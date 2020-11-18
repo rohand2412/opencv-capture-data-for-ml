@@ -4,13 +4,14 @@
 import os
 import datetime
 import time
-import copy
+import queue
 import numpy as np
 import cv2
 from imutils.video.pivideostream import PiVideoStream
 import pynput
 
-KEYBOARD_BUFFER_INDEX_OF_VAL = 0
+KEYBOARD_PRESSED_ITEM_NAME = "pressed"
+KEYBOARD_RELEASED_ITEM_NAME = "released"
 
 class ModulesPackage:
     """Contains basic framework of all modules utilized in this directory"""
@@ -248,104 +249,52 @@ class ModulesPackage:
             return self._height
 
     class Keyboard:
-        def __init__(self):
-            self._listener = None
-            self._len_event_buffers = 32
-            self._pressed = self._Buffer(self._len_event_buffers)
-            self._released = self._Buffer(self._len_event_buffers)
+        """Wraps pynput keyboard class and embeds event queue for accesing and organizing key
+        events"""
+        def __init__(self, len_event_buffers=64):
+            self._listener = pynput.keyboard.Listener(on_press=self._on_press,
+                                                      on_release=self._on_release)
+            self._events = queue.Queue(maxsize=len_event_buffers)
 
         def _on_press(self, key):
-            self._pressed.log_events(key)
+            """Callback for when key is pressed"""
+            self._produce(KEYBOARD_PRESSED_ITEM_NAME, key)
 
         def _on_release(self, key):
-            self._released.log_events(key)
+            """Callback for when key is released"""
+            self._produce(KEYBOARD_RELEASED_ITEM_NAME, key)
 
         def start(self):
-            self._listener = pynput.keyboard.Listener(on_press=self._on_press,
-                                                    on_release=self._on_release)
+            """Starts listening to the keyboard"""
             self._listener.start()
 
         def stop(self):
+            """Stops listening to the keyboard"""
             self._listener.stop()
-        
-        def get_pressed(self):
-            pressed = copy.deepcopy(self._pressed)
-            self._pressed.just_returned_events()
-            return pressed
-        
-        def get_released(self):
-            released = copy.deepcopy(self._released)
-            self._released.just_returned_events()
-            return released
-        
-        def get_len_event_buffers(self):
-            return self._len_event_buffers
 
-        class _Buffer:
-            def __init__(self, len_event_buffers):
-                self._just_returned_events = False
-                self._len_event_buffers = len_event_buffers
-                self._buffer = np.array([None for i in range(self._len_event_buffers)])
-                self._len = 0
-                self._write_index = [0]
-                self._read_index = [0]
-                self._event_count = [0]
+        def _produce(self, name, key):
+            """Produces key into events queue"""
+            self._events.put(self._Item(name, key), block=False)
 
-            def log_events(self, key):
-                if self._event_count[KEYBOARD_BUFFER_INDEX_OF_VAL] == self._len_event_buffers:
-                    while True:
-                        print("[ERROR] BUFFER OVERFLOW")
-                self._buffer[self._write_index[KEYBOARD_BUFFER_INDEX_OF_VAL]] = key
-                self.increment_write_index()
-                print("Logging events")
-                self.increment_event_count()
+        def consume(self):
+            """Iterates through event queue and consumes each key indiviidually"""
+            while not self._events.empty():
+                event = self._events.get()
+                print("{} {}".format(event.get_name(), event.get_key().name))
 
-                # if self._just_returned_events:
-                #     self.empty_events()
-                #     self._just_returned_events = False
-                
-                # self._buffer[self._len] = key
-                # if self._len == len(self._buffer)-1:
-                #     self._buffer[0] = None
-                #     self._buffer = np.roll(self._buffer, -1)
-                # else:
-                #     print("Added one more to len -- ", key, end=" -- ")
-                #     print(self._buffer[:5], end=" -- ")
-                #     self._len += 1
-                #     print(self._len, " --ID: ", id(self))
+        def get_events(self):
+            """Returns events queue"""
+            return self._events
 
-            def empty_events(self):
-                self._buffer[:] = None
-                self._len = 0
-                print("ee")
+        class _Item:
+            def __init__(self, name, key):
+                self._name = name
+                self._key = key
 
-            def just_returned_events(self):
-                self._just_returned_events = True
-            
-            def increment_write_index(self):
-                self._write_index[KEYBOARD_BUFFER_INDEX_OF_VAL] = (self._write_index[KEYBOARD_BUFFER_INDEX_OF_VAL] + 1) % self._len_event_buffers
-            
-            def increment_read_index(self):
-                self._read_index[KEYBOARD_BUFFER_INDEX_OF_VAL] = (self._read_index[KEYBOARD_BUFFER_INDEX_OF_VAL] + 1) % self._len_event_buffers
-            
-            def increment_event_count(self):
-                self._event_count[KEYBOARD_BUFFER_INDEX_OF_VAL] += 1
-                print("Incremented event count -- ", self._event_count[KEYBOARD_BUFFER_INDEX_OF_VAL])
-            
-            def decrement_event_count(self):
-                self._event_count[KEYBOARD_BUFFER_INDEX_OF_VAL] -= 1
-            
-            def get_write_index(self):
-                return self._write_index
-            
-            def get_read_index(self):
-                return self._read_index
-            
-            def get_event_count(self):
-                return self._event_count
+            def get_name(self):
+                """Returns name"""
+                return self._name
 
-            def get_buffer(self):
-                return self._buffer
-
-            def get_len(self):
-                return self._len
+            def get_key(self):
+                """Returns key"""
+                return self._key
