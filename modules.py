@@ -80,8 +80,8 @@ class ModulesPackage:
                     self._text = None
 
                 def calculate(self, names, nums):
-                    """Calculates data on the most recent directory from the names and numbers of all of
-                    them"""
+                    """Calculates data on the most recent directory from the names and numbers of
+                    all of them"""
                     self._num = np.amax(nums)
                     self._index = int(np.where(nums == self._num)[0])
                     self._name = names[self._index]
@@ -124,6 +124,7 @@ class ModulesPackage:
                 self._start_delay = None
 
             def read(self):
+                """Cache or Load and Store the images in the target directory"""
                 self._names = os.listdir(self.get_target_dir())
                 self._text, self._ext = os.path.splitext(self._names[0])
                 self._text = ''.join(filter(str.isalpha, self._text))
@@ -135,16 +136,19 @@ class ModulesPackage:
                 self._images = [None for name in self._names]
                 for i, name in enumerate(self._names):
                     self._images[i] = cv2.imread(self._target_dir+r'/'+name)
-                    self._images[i] = cv2.putText(self._images[i], text=str(i), org = (0, 25),
-                                                fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=1,
-                                                color= (0, 255, 0), thickness=2, lineType=cv2.LINE_AA)
+                    self._images[i] = cv2.putText(self._images[i], text=str(i), org=(0, 25),
+                                                  fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=1,
+                                                  color=(0, 255, 0), thickness=2,
+                                                  lineType=cv2.LINE_AA)
                 self._images = np.array(self._images)
 
             def imshow(self):
+                """Display the image that is next up in the slideshow"""
                 if not self._start_delay:
                     cv2.imshow("slideshow", self._images[self._img_num])
 
             def update(self, delay_ms):
+                """Check if delay is completed or if delay needs to be reset"""
                 if not self._start_delay:
                     self._img_num += 1
                     if self._img_num >= len(self._images):
@@ -154,12 +158,15 @@ class ModulesPackage:
                     self._start_delay = None
 
             def get_target_dir(self):
+                """Return name of target directory"""
                 return self._target_dir
 
             def get_names(self):
+                """Return image filenames"""
                 return self._names
-            
+
             def get_images(self):
+                """Return images in the target directory"""
                 return self._images
 
     class Fps:

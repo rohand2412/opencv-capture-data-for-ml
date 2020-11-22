@@ -2,12 +2,11 @@
 """This script will display the data in the form of a slideshow"""
 
 import cv2
-import modules
 from display_data_utils import DisplayData
 
 def main():
     """Main code"""
-    img_dir = modules.DirectoryManagement.ReadDir(target_dir=r'/home/pi/Documents/Images/Test8')
+    img_dir = DisplayData.DirectoryManagement.ReadDir(target_dir=r'/home/pi/Documents/Images/Test8')
     img_dir.read()
     keyboard = DisplayData.Keyboard()
     keyboard.start()
@@ -19,7 +18,9 @@ def main():
 
             keyboard.consume()
 
-    except modules.Break:
+            DisplayData.check_for_quit_request()
+
+    except DisplayData.Break:
         cv2.destroyAllWindows()
         keyboard.stop()
 
