@@ -10,11 +10,12 @@ import cv2
 from imutils.video.pivideostream import PiVideoStream
 import pynput
 
-KEYBOARD_PRESSED_ITEM_NAME = "pressed"
-KEYBOARD_RELEASED_ITEM_NAME = "released"
-
 class ModulesPackage:
     """Contains basic framework of all modules utilized in this directory"""
+    KEYBOARD_PRESSED_ITEM_NAME = "pressed"
+    KEYBOARD_RELEASED_ITEM_NAME = "released"
+    READDIR_SLIDESHOW_MODE_KEYBOARD = "keyboard"
+    READDIR_SLIDESHOW_MODE_DELAY = "delay"
 
     @staticmethod
     def check_for_quit_request():
@@ -114,14 +115,24 @@ class ModulesPackage:
 
         class ReadDir:
             """Class with methods to read and display from an images directory"""
-            def __init__(self, target_dir):
+            def __init__(self, target_dir, mode, delay=250):
+                self._keyboard = ModulesPackage.Keyboard()
                 self._target_dir = target_dir
+                self._mode = mode
                 self._names = []
                 self._text = None
                 self._ext = None
                 self._images = []
                 self._img_num = 0
                 self._start_delay = None
+                self._delay = delay
+                self._left_key = "left"
+                self._right_key = "right"
+                self._left_key_state = False
+                self._right_key_state = False
+
+                if self._mode == ModulesPackage.READDIR_SLIDESHOW_MODE_KEYBOARD:
+                    self._keyboard.start()
 
             def read(self):
                 """Cache or Load and Store the images in the target directory"""
@@ -144,18 +155,44 @@ class ModulesPackage:
 
             def imshow(self):
                 """Display the image that is next up in the slideshow"""
-                if not self._start_delay:
+                if self._mode == ModulesPackage.READDIR_SLIDESHOW_MODE_DELAY:
+                    if not self._start_delay:
+                        cv2.imshow("slideshow", self._images[self._img_num])
+                elif self._mode == ModulesPackage.READDIR_SLIDESHOW_MODE_KEYBOARD:
                     cv2.imshow("slideshow", self._images[self._img_num])
 
-            def update(self, delay_ms):
+            def update(self):
                 """Check if delay is completed or if delay needs to be reset"""
-                if not self._start_delay:
-                    self._img_num += 1
-                    if self._img_num >= len(self._images):
-                        raise ModulesPackage.Break
-                    self._start_delay = datetime.datetime.now()
-                elif (datetime.datetime.now() - self._start_delay).total_seconds() >= (delay_ms/1000.0):
-                    self._start_delay = None
+                if self._mode == ModulesPackage.READDIR_SLIDESHOW_MODE_DELAY:
+                    if not self._start_delay:
+                        self._img_num += 1
+                        if self._img_num >= len(self._images):
+                            raise ModulesPackage.Break
+                        self._start_delay = datetime.datetime.now()
+                    elif (datetime.datetime.now() - self._start_delay).total_seconds() >= (self._delay/1000.0):
+                        self._start_delay = None
+                elif self._mode == ModulesPackage.READDIR_SLIDESHOW_MODE_KEYBOARD:
+                    while not self._keyboard.get_events().empty():
+                        event = self._keyboard.get_events().get()
+                        if event.get_name() == ModulesPackage.KEYBOARD_PRESSED_ITEM_NAME:
+                            if event.get_key() == self._left_key:
+                                self._left_key_state = True
+                            elif event.get_key() == self._right_key:
+                                self._right_key_state = True
+                        elif event.get_name() == ModulesPackage.KEYBOARD_RELEASED_ITEM_NAME:
+                            if event.get_key() == self._left_key:
+                                self._left_key_state = False
+                            elif event.get_key() == self._right_key:
+                                self._right_key_state = False
+                    if self._left_key_state and self._img_num > 0:
+                        self._img_num -= 1
+                    if self._right_key_state and self._img_num < (len(self._images) - 1):
+                        self._img_num += 1
+
+            def close(self):
+                """Deactivates keyboard if necessary"""
+                if self._mode == ModulesPackage.READDIR_SLIDESHOW_MODE_KEYBOARD:
+                    self._keyboard.stop()
 
             def get_target_dir(self):
                 """Return name of target directory"""
@@ -168,6 +205,10 @@ class ModulesPackage:
             def get_images(self):
                 """Return images in the target directory"""
                 return self._images
+
+            def get_mode(self):
+                """Returns mode of image slideshow"""
+                return self._mode
 
     class Fps:
         """Computes Fps over a series of frames and their times"""
@@ -265,11 +306,11 @@ class ModulesPackage:
 
         def _on_press(self, key):
             """Callback for when key is pressed"""
-            self._produce(KEYBOARD_PRESSED_ITEM_NAME, key)
+            self._produce(ModulesPackage.KEYBOARD_PRESSED_ITEM_NAME, key)
 
         def _on_release(self, key):
             """Callback for when key is released"""
-            self._produce(KEYBOARD_RELEASED_ITEM_NAME, key)
+            self._produce(ModulesPackage.KEYBOARD_RELEASED_ITEM_NAME, key)
 
         def start(self):
             """Starts listening to the keyboard"""
@@ -300,5 +341,8 @@ class ModulesPackage:
                 return self._name
 
             def get_key(self):
-                """Returns key"""
-                return self._key
+                """Returns name of key enum if special character or key itself if in alphabet"""
+                try:
+                    return self._key.name
+                except AttributeError:
+                    return self._key
