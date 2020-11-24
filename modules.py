@@ -351,6 +351,7 @@ class ModulesPackage:
                     return self._key
 
     class Timer:
+        """Monitors time to provide elapsed time or activate a callback"""
         def __init__(self, callback=None, delay_ms=None):
             self._start_time = None
             self._elapsed_time = None
@@ -358,12 +359,14 @@ class ModulesPackage:
             self._delay_ms = delay_ms
 
         def start(self):
+            """Starts Timer"""
             if self._start_time is not None:
                 raise ModulesPackage.TimerError(f"Timer is already running. Use .stop() to stop it")
 
             self._start_time = time.perf_counter()
 
         def stop(self):
+            """Stops Timer"""
             if self._start_time is None:
                 raise ModulesPackage.TimerError(f"Timer is not already running. Use .start() to \
                                                 start it")
@@ -372,12 +375,14 @@ class ModulesPackage:
             self._start_time = None
 
         def get_elapsed_time(self):
+            """Calculates elapsed time if timer is running or provides already defined value"""
             if self._start_time is not None:
                 return time.perf_counter() - self._start_time
             else:
                 return self._elapsed_time
 
         def update(self):
+            """Activates callback and resets timer if specified amount of time has passed"""
             if self._callback is None:
                 raise ModulesPackage.TimerError(f"No callback specified. Please specify in \
                                                 constructor")

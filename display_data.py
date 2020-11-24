@@ -1,11 +1,11 @@
 #!usr/bin/env python3
 """This script will display the data in the form of a slideshow"""
 
-import time
 import cv2
 from display_data_utils import DisplayData
 
 def nothing():
+    """Does nothing"""
     print("nothing")
 
 def main():
