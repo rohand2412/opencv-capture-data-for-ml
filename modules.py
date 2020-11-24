@@ -25,6 +25,9 @@ class ModulesPackage:
 
     class Break(Exception):
         """Emulates a break from within a function"""
+    
+    class TimerError(Exception):
+        """Used to report errors from Timer class"""
 
     class DirectoryManagement:
         """Manages the directory and has classes to write and read directories"""
@@ -346,3 +349,49 @@ class ModulesPackage:
                     return self._key.name
                 except AttributeError:
                     return self._key
+
+    class Timer:
+        def __init__(self, callback=None, delay_ms=None):
+            self._start_time = None
+            self._elapsed_time = None
+            self._callback = callback
+            self._delay_ms = delay_ms
+
+        def start(self):
+            if self._start_time is not None:
+                raise ModulesPackage.TimerError(f"Timer is already running. Use .stop() to stop it")
+
+            self._start_time = time.perf_counter()
+
+        def stop(self):
+            if self._start_time is None:
+                raise ModulesPackage.TimerError(f"Timer is not already running. Use .start() to \
+                                                start it")
+
+            self._elapsed_time = time.perf_counter() - self._start_time
+            self._start_time = None
+
+        def get_elapsed_time(self):
+            if self._start_time is not None:
+                return time.perf_counter() - self._start_time
+            else:
+                return self._elapsed_time
+
+        def update(self):
+            if self._callback is None:
+                raise ModulesPackage.TimerError(f"No callback specified. Please specify in \
+                                                constructor")
+            if self._delay_ms is None:
+                raise ModulesPackage.TimerError(f"No delay specified. Please specify in \
+                                                constructor")
+            if self._start_time is None:
+                raise ModulesPackage.TimerError(f"Timer is not already running. Cannot check \
+                                                elapsed time on inactive Timer.Use.start() to \
+                                                start it ")
+
+            if (time.perf_counter() - self._start_time) >= (self._delay_ms / 1000.0):
+                self.stop()
+                self._callback()
+                return True
+            else:
+                return False
