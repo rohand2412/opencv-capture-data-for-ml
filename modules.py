@@ -15,6 +15,8 @@ class ModulesPackage:
     """Contains basic framework of all modules utilized in this directory"""
     KEYBOARD_PRESSED_STATE = True
     KEYBOARD_RELEASED_STATE = False
+    KEYBOARD_ACTION_TYPE_TAP = "tap"
+    KEYBOARD_ACTION_TYPE_HOLD = "hold"
     READDIR_SLIDESHOW_MODE_KEYBOARD = "keyboard"
     READDIR_SLIDESHOW_MODE_DELAY = "delay"
 
@@ -133,8 +135,12 @@ class ModulesPackage:
                 self._delay = delay
                 self._left_key = "left"
                 self._right_key = "right"
-                self._left_key_state = False
-                self._right_key_state = False
+                self._left_key_state = ModulesPackage.KEYBOARD_RELEASED_STATE
+                self._right_key_state = ModulesPackage.KEYBOARD_RELEASED_STATE
+                self._left_key_action_type = None
+                self._right_key_action_type = None
+                self._left_tap_update = False
+                self._right_tap_update = False
 
                 if self._mode == ModulesPackage.READDIR_SLIDESHOW_MODE_KEYBOARD:
                     self._keyboard.start()
@@ -179,20 +185,30 @@ class ModulesPackage:
                 elif self._mode == ModulesPackage.READDIR_SLIDESHOW_MODE_KEYBOARD:
                     while not self._keyboard.get_events().empty():
                         event = self._keyboard.get_events().get()
-                        if event.get_state() == ModulesPackage.KEYBOARD_PRESSED_STATE:
-                            if event.get_name() == self._left_key:
-                                self._left_key_state = ModulesPackage.KEYBOARD_PRESSED_STATE
-                            elif event.get_name() == self._right_key:
-                                self._right_key_state = ModulesPackage.KEYBOARD_PRESSED_STATE
-                        elif event.get_state() == ModulesPackage.KEYBOARD_RELEASED_STATE:
-                            if event.get_name() == self._left_key:
-                                self._left_key_state = ModulesPackage.KEYBOARD_RELEASED_STATE
-                            elif event.get_name() == self._right_key:
-                                self._right_key_state = ModulesPackage.KEYBOARD_RELEASED_STATE
-                    if self._left_key_state and self._img_num > 0:
-                        self._img_num -= 1
-                    if self._right_key_state and self._img_num < (len(self._images) - 1):
-                        self._img_num += 1
+                        if event.get_name() == self._left_key:
+                            self._left_key_state = event.get_state()
+                            self._left_key_action_type = event.get_action_type()
+                        elif event.get_name() == self._right_key:
+                            self._right_key_state = event.get_state()
+                            self._right_key_action_type = event.get_action_type()
+
+                    if self._left_key_state == ModulesPackage.KEYBOARD_PRESSED_STATE and self._img_num > 0:
+                        if self._left_key_action_type == ModulesPackage.KEYBOARD_ACTION_TYPE_TAP and not self._left_tap_update:
+                            self._img_num -= 1
+                            self._left_tap_update = True
+                        elif self._left_key_action_type == ModulesPackage.KEYBOARD_ACTION_TYPE_HOLD:
+                            self._img_num -= 1
+                    elif self._left_key_state == ModulesPackage.KEYBOARD_RELEASED_STATE:
+                        self._left_tap_update = False
+
+                    if self._right_key_state == ModulesPackage.KEYBOARD_PRESSED_STATE and self._img_num < (len(self._images) - 1):
+                        if self._right_key_action_type == ModulesPackage.KEYBOARD_ACTION_TYPE_TAP and not self._right_tap_update:
+                            self._img_num += 1
+                            self._right_tap_update = True
+                        elif self._right_key_action_type == ModulesPackage.KEYBOARD_ACTION_TYPE_HOLD:
+                            self._img_num += 1
+                    elif self._right_key_state == ModulesPackage.KEYBOARD_RELEASED_STATE:
+                        self._right_tap_update = False
 
             def close(self):
                 """Deactivates keyboard if necessary"""
@@ -382,6 +398,15 @@ class ModulesPackage:
                     print("state: ", self._state)
                     print("name: ", self._name)
                     self._timer.debug(debug)
+
+            def get_action_type(self):
+                """Classify key action as 'tap' or 'hold' based on press duration"""
+                tap_duration = 0.15
+                elapsed_time = self.get_elapsed_time()
+                if elapsed_time <= tap_duration:
+                    return ModulesPackage.KEYBOARD_ACTION_TYPE_TAP
+                else:
+                    return ModulesPackage.KEYBOARD_ACTION_TYPE_HOLD
 
             def get_elapsed_time(self):
                 """Wraps Timer class' get_elapsed_time method"""
