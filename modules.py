@@ -234,30 +234,27 @@ class ModulesPackage:
     class Fps:
         """Computes Fps over a series of frames and their times"""
         def __init__(self):
+            self._timer = ModulesPackage.Timer()
             self._elapsed_times = np.array([])
             self._ms_to_seconds = 1.0/1000000.0
-            self._start_time = None
-            self._end_time = None
             self._mean = None
-            self._seconds_per_frame = None
             self._fps = None
 
         def open_timer(self):
             """Starts timer that determines the elapsed time"""
-            self._start_time = datetime.datetime.now()
+            self._timer.start()
 
         def close_timer(self):
             """Stops timer that determines the elapsed time"""
-            self._end_time = datetime.datetime.now()
-            self._elapsed_times = np.append(self._elapsed_times, self._end_time - self._start_time)
+            self._timer.stop()
+            self._elapsed_times = np.append(self._elapsed_times, self._timer.get_elapsed_time())
             return self._elapsed_times[-1]
 
         def calculate(self):
             """Calculates the fps based upon a series of stats"""
             self._elapsed_times = np.delete(self._elapsed_times, [0])
             self._mean = np.mean(self._elapsed_times)
-            self._seconds_per_frame = self._mean.microseconds * self._ms_to_seconds
-            self._fps = 1.0/self._seconds_per_frame
+            self._fps = 1.0/self._mean
 
         def print_fps(self):
             """Prints out just fps"""
@@ -266,12 +263,10 @@ class ModulesPackage:
         def debug(self, debug):
             """Prints out values of all variables for debugging"""
             if debug:
-                print("startTime: " + str(self._start_time))
-                print("endTime: " + str(self._end_time))
                 print("elapsedTimes: " + str(self._elapsed_times))
                 print("mean: " + str(self._mean))
-                print("secondsPerFrame: " + str(self._seconds_per_frame))
                 print("fps: " + str(self._fps))
+                self._timer.debug(debug)
 
         def get_fps(self):
             """Returns fps"""
