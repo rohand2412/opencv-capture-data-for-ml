@@ -5,6 +5,7 @@ import os
 import datetime
 import time
 import queue
+import string
 import numpy as np
 import cv2
 from imutils.video.pivideostream import PiVideoStream
@@ -12,8 +13,8 @@ import pynput
 
 class ModulesPackage:
     """Contains basic framework of all modules utilized in this directory"""
-    KEYBOARD_PRESSED_ITEM_NAME = "pressed"
-    KEYBOARD_RELEASED_ITEM_NAME = "released"
+    KEYBOARD_PRESSED_STATE = True
+    KEYBOARD_RELEASED_STATE = False
     READDIR_SLIDESHOW_MODE_KEYBOARD = "keyboard"
     READDIR_SLIDESHOW_MODE_DELAY = "delay"
 
@@ -21,11 +22,12 @@ class ModulesPackage:
     def check_for_quit_request():
         """Quits if 'q' key is pressed"""
         if cv2.waitKey(1) & 0xFF == ord('q'):
-            raise ModulesPackage.Break
+            print(end="")
+            raise ModulesPackage.Break()
 
     class Break(Exception):
         """Emulates a break from within a function"""
-    
+
     class TimerError(Exception):
         """Used to report errors from Timer class"""
 
@@ -177,16 +179,16 @@ class ModulesPackage:
                 elif self._mode == ModulesPackage.READDIR_SLIDESHOW_MODE_KEYBOARD:
                     while not self._keyboard.get_events().empty():
                         event = self._keyboard.get_events().get()
-                        if event.get_name() == ModulesPackage.KEYBOARD_PRESSED_ITEM_NAME:
-                            if event.get_key() == self._left_key:
-                                self._left_key_state = True
-                            elif event.get_key() == self._right_key:
-                                self._right_key_state = True
-                        elif event.get_name() == ModulesPackage.KEYBOARD_RELEASED_ITEM_NAME:
-                            if event.get_key() == self._left_key:
-                                self._left_key_state = False
-                            elif event.get_key() == self._right_key:
-                                self._right_key_state = False
+                        if event.get_state() == ModulesPackage.KEYBOARD_PRESSED_STATE:
+                            if event.get_name() == self._left_key:
+                                self._left_key_state = ModulesPackage.KEYBOARD_PRESSED_STATE
+                            elif event.get_name() == self._right_key:
+                                self._right_key_state = ModulesPackage.KEYBOARD_PRESSED_STATE
+                        elif event.get_state() == ModulesPackage.KEYBOARD_RELEASED_STATE:
+                            if event.get_name() == self._left_key:
+                                self._left_key_state = ModulesPackage.KEYBOARD_RELEASED_STATE
+                            elif event.get_name() == self._right_key:
+                                self._right_key_state = ModulesPackage.KEYBOARD_RELEASED_STATE
                     if self._left_key_state and self._img_num > 0:
                         self._img_num -= 1
                     if self._right_key_state and self._img_num < (len(self._images) - 1):
@@ -306,14 +308,15 @@ class ModulesPackage:
             self._listener = pynput.keyboard.Listener(on_press=self._on_press,
                                                       on_release=self._on_release)
             self._events = queue.Queue(maxsize=len_event_buffers)
+            self._keys = {key_name: self._Key(key_name) for key_name in self.get_key_names()}
 
         def _on_press(self, key):
             """Callback for when key is pressed"""
-            self._produce(ModulesPackage.KEYBOARD_PRESSED_ITEM_NAME, key)
+            self._produce(ModulesPackage.KEYBOARD_PRESSED_STATE, key)
 
         def _on_release(self, key):
             """Callback for when key is released"""
-            self._produce(ModulesPackage.KEYBOARD_RELEASED_ITEM_NAME, key)
+            self._produce(ModulesPackage.KEYBOARD_RELEASED_STATE, key)
 
         def start(self):
             """Starts listening to the keyboard"""
@@ -323,32 +326,74 @@ class ModulesPackage:
             """Stops listening to the keyboard"""
             self._listener.stop()
 
-        def _produce(self, name, key):
+        def _produce(self, state, key):
             """Produces key into events queue"""
-            self._events.put(self._Item(name, key), block=False)
+            key_name = self._Key.name(key)
+            self._keys[key_name].set_state(state)
+            self._events.put(self._keys[key_name], block=False)
 
         def consume(self):
             """Consumes keys in the events queue"""
+
+        @staticmethod
+        def get_key_names():
+            """Returns string list of all key names including both special keys and letter keys"""
+            key_data = list(pynput.keyboard.Key.__dict__.values())
+            key_names = np.array([])
+            for data in key_data:
+                if isinstance(data, list):
+                    special_keys = np.array(data)
+                    lowercase_alphabet = np.array(list(string.ascii_lowercase),
+                                                  dtype=special_keys.dtype)
+                    key_names = np.concatenate((special_keys, lowercase_alphabet))
+                    break
+            return key_names
 
         def get_events(self):
             """Returns events queue"""
             return self._events
 
-        class _Item:
-            def __init__(self, name, key):
+        class _Key:
+            def __init__(self, name):
+                self._state = False
                 self._name = name
-                self._key = key
+                self._timer = ModulesPackage.Timer()
 
-            def get_name(self):
-                """Returns name"""
-                return self._name
-
-            def get_key(self):
+            @staticmethod
+            def name(key):
                 """Returns name of key enum if special character or key itself if in alphabet"""
                 try:
-                    return self._key.name
+                    return key.name
                 except AttributeError:
-                    return self._key
+                    return key.char
+
+            def set_state(self, state):
+                """Sets the state of the key and start and stop the timer"""
+                if self._state != state:
+                    self._state = state
+                    if self._state == ModulesPackage.KEYBOARD_PRESSED_STATE:
+                        self._timer.start()
+                    elif self._state == ModulesPackage.KEYBOARD_RELEASED_STATE:
+                        self._timer.stop()
+
+            def debug(self, debug):
+                """Prints out all stored data for debugging"""
+                if debug:
+                    print("state: ", self._state)
+                    print("name: ", self._name)
+                    self._timer.debug(debug)
+
+            def get_elapsed_time(self):
+                """Wraps Timer class' get_elapsed_time method"""
+                return self._timer.get_elapsed_time()
+
+            def get_state(self):
+                """Returns state of key"""
+                return self._state
+
+            def get_name(self):
+                """Returns name of key"""
+                return self._name
 
     class Timer:
         """Monitors time to provide elapsed time or activate a callback"""
@@ -400,3 +445,11 @@ class ModulesPackage:
                 return True
             else:
                 return False
+
+        def debug(self, debug):
+            """Prints out all stored data for debugging"""
+            if debug:
+                print("start_time: ", self._start_time)
+                print("elapsed_time: ", self._elapsed_time)
+                print("delay_ms: ", self._delay_ms)
+                print("callback: ", self._callback)
