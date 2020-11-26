@@ -17,15 +17,13 @@ def main():
 
     try:
         while True:
-            fps.open_timer()
-            frame.capture_frame()
-            frame.preprocessing()
-            frame.imshow()
-            frame.update()
+            with fps.time_this():
+                frame.capture_frame()
+                frame.preprocessing()
+                frame.imshow()
+                frame.update()
 
-            CaptureData.check_for_quit_request()
-
-            print(fps.close_timer())
+                CaptureData.check_for_quit_request()
 
     except CaptureData.Break:
         frame.get_camera().stop()

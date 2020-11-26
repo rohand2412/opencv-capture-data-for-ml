@@ -272,6 +272,22 @@ class ModulesPackage:
             """Returns fps"""
             return self._fps
 
+        def time_this(self):
+            """Returns an automated timer context manager for usage in 'with' statements"""
+            return self._AutomatedTiming(self.open_timer, self.close_timer)
+
+        class _AutomatedTiming:
+            """Context Manager that can be used without redefining class instance"""
+            def __init__(self, enter_func, exit_func):
+                self._enter = enter_func
+                self._exit = exit_func
+
+            def __enter__(self):
+                self._enter()
+
+            def __exit__(self, exc_type, exc_value, exc_traceback):
+                self._exit()
+
     class Frame:
         """Keeps track of all data regarding the video stream"""
         def __init__(self, name):
