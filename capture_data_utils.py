@@ -61,3 +61,12 @@ class CaptureData(modules.ModulesPackage):
         def get_num(self):
             """Returns running number of current frames"""
             return self._num
+
+    class InitBashArgs(modules.ModulesPackage.InitBashArgs):
+        """Initalizes the arguements present for bash execution which will be different for each
+        application of this wrapper"""
+        @classmethod
+        def get_arg_params(cls):
+            """Returns the argument paramters"""
+            cls._parser.add_argument("--target-dir", default="/home/pi/Documents/Images/",
+                                     type=str, help="directory from which data will be displayed")
