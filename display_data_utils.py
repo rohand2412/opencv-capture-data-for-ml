@@ -11,5 +11,5 @@ class DisplayData(modules.ModulesPackage):
         @classmethod
         def get_arg_params(cls):
             """Returns the argument paramters"""
-            cls._parser.add_argument("--data-dir", default="Test0", type=str,
-                                     help="directory from which data will be displayed")
+            cls._parser.add_argument("--target-dir", default="/home/pi/Documents/Images/Test0",
+                                     type=str, help="directory from which data will be displayed")

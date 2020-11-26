@@ -8,8 +8,8 @@ def main():
     """Main code"""
     DisplayData.InitBashArgs()
     args = DisplayData.InitBashArgs.get_args()
-    print(args.data_dir)
-    img_dir = DisplayData.DirectoryManagement.ReadDir(target_dir=r'/home/pi/Documents/Images/Test8',
+
+    img_dir = DisplayData.DirectoryManagement.ReadDir(target_dir=args.target_dir,
                                                       mode=DisplayData.READDIR_SLIDESHOW_MODE_KEYBOARD)
     img_dir.read()
 
