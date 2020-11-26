@@ -6,6 +6,7 @@ import datetime
 import time
 import queue
 import string
+import argparse
 import numpy as np
 import cv2
 from imutils.video.pivideostream import PiVideoStream
@@ -489,3 +490,21 @@ class ModulesPackage:
                 print("elapsed_time: ", self._elapsed_time)
                 print("delay_ms: ", self._delay_ms)
                 print("callback: ", self._callback)
+
+    class InitBashArgs:
+        """Initalizes the arguements present for bash execution which will be different for each
+        application of this wrapper"""
+        @classmethod
+        def __init__(cls):
+            cls._parser = argparse.ArgumentParser()
+            cls.get_arg_params()
+            cls._args = cls._parser.parse_args()
+
+        @classmethod
+        def get_arg_params(cls):
+            """Returns the argument paramters"""
+
+        @classmethod
+        def get_args(cls):
+            """Returns data inputted from bash"""
+            return cls._args
