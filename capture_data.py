@@ -32,7 +32,7 @@ def main():
         frame.get_camera().stop()
         cv2.destroyAllWindows()
 
-        fps.calculate()
+        fps.calculate(frame.get_num())
         fps.debug(False)
         fps.print_fps()
 

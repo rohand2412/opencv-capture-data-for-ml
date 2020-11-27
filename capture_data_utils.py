@@ -7,6 +7,14 @@ import modules
 
 class CaptureData(modules.ModulesPackage):
     """Class that adapts parents modules for CaptureData"""
+    class Fps(modules.ModulesPackage.Fps):
+        """Computes Fps over a series of frames and their times"""
+        def calculate(self, frame_num):
+            """Calculates the fps based upon a series of stats"""
+            self._elapsed_times = np.delete(self._elapsed_times, [0])
+            self._mean = np.sum(self._elapsed_times)/frame_num*1.0
+            self._fps = 1.0 / self._mean
+
     class Frame(modules.ModulesPackage.Frame):
         """Keeps track of all data regarding the video stream"""
         def __init__(self, name, side, filename, limit_of_frames=None):
