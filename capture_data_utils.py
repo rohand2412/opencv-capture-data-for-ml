@@ -15,30 +15,46 @@ class CaptureData(modules.ModulesPackage):
             self._side = side
             self._limit_of_frames = limit_of_frames
             self._num = 1
+            self._duplicate_frame = False
+            self._frame_orig = np.array([])
 
             if self._limit_of_frames:
                 self._buffer = [None for i in range(self.get_limit_of_frames())]
             else:
                 self._buffer = []
 
+        def capture_frame(self):
+            """Reads the frame from the video stream"""
+            self._duplicate_frame = False
+
+            frame = self._camera.read()
+            if self._frame.any():
+                if not (np.subtract(self._frame_orig, cv2.resize(frame, (320, 240))).any()):
+                    self._duplicate_frame = True
+            if not self._duplicate_frame:
+                self._frame = frame
+                self._frame_orig = cv2.resize(frame, (320, 240))
+
         def preprocessing(self):
             """Preprocesses the frame"""
-            self._frame = cv2.flip(self._frame, 1)
-            self._frame = self._frame[int((self._height-self._side)/2):
-                                      int((self._height+self._side)/2),
-                                      int((self._width-self._side)/2):
-                                      int((self._width+self._side)/2)]
+            if not self._duplicate_frame:
+                self._frame = cv2.flip(self._frame, 1)
+                self._frame = self._frame[int((self._height-self._side)/2):
+                                          int((self._height+self._side)/2),
+                                          int((self._width-self._side)/2):
+                                          int((self._width+self._side)/2)]
 
-            if self._limit_of_frames:
-                self._buffer[self._num-1] = self._frame
-            else:
-                self._buffer.append(self._frame)
+                if self._limit_of_frames:
+                    self._buffer[self._num-1] = self._frame
+                else:
+                    self._buffer.append(self._frame)
 
         def update(self):
-            if self._limit_of_frames:
-                if self._num >= self._limit_of_frames:
-                    raise modules.ModulesPackage.Break
-            self._num += 1
+            if not self._duplicate_frame:
+                if self._limit_of_frames:
+                    if self._num >= self._limit_of_frames:
+                        raise modules.ModulesPackage.Break
+                self._num += 1
 
         def export_buffer(self):
             """Saves all the frames from the video stream using a consistent naming convention"""

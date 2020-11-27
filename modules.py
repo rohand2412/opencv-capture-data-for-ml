@@ -297,7 +297,7 @@ class ModulesPackage:
             self._camera = PiVideoStream(resolution=(self._width, self._height)).start()
             time.sleep(2.0)
             self._name = name
-            self._frame = None
+            self._frame = np.array([])
 
         def capture_frame(self):
             """Reads the frame from the video stream"""
