@@ -13,3 +13,7 @@ class DisplayData(modules.ModulesPackage):
             """Returns the argument paramters"""
             cls._parser.add_argument("--target-dir", default="/home/pi/Documents/Images/Test0",
                                      type=str, help="directory from which data will be displayed")
+            cls._parser.add_argument("--slideshow-mode",
+                                     default=modules.ModulesPackage.READDIR_SLIDESHOW_MODE_KEYBOARD,
+                                     type=str,
+                                     help="mode of slidshow interface: either delay or keyboard input")

@@ -10,7 +10,7 @@ def main():
     args = DisplayData.InitBashArgs.get_args()
 
     img_dir = DisplayData.DirectoryManagement.ReadDir(target_dir=args.target_dir,
-                                                      mode=DisplayData.READDIR_SLIDESHOW_MODE_KEYBOARD)
+                                                      mode=args.slideshow_mode)
     img_dir.read()
 
     try:

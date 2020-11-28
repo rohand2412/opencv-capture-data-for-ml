@@ -94,3 +94,5 @@ class CaptureData(modules.ModulesPackage):
             """Returns the argument paramters"""
             cls._parser.add_argument("--target-dir", default="/home/pi/Documents/Images/",
                                      type=str, help="directory from which data will be displayed")
+            cls._parser.add_argument("--limit-of-frames", default=None, type=int,
+                                     help="number of frames that will be captured")
