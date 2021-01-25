@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """This script contains all of the modules used in capture_data.py"""
 
+import picamera
+import picamera.array
+import time
 import numpy as np
 import cv2
 import modules
@@ -18,7 +21,16 @@ class CaptureData(modules.ModulesPackage):
     class Frame(modules.ModulesPackage.Frame):
         """Keeps track of all data regarding the video stream"""
         def __init__(self, name, side, filename, limit_of_frames=None):
-            super().__init__(name)
+            self._width = 640
+            self._height = 480
+            self._camera = picamera.PiCamera()
+            self._camera.resolution = (self._width, self._height)
+            self._camera.framerate = 32
+            self._camera.start_preview()
+            time.sleep(0.1)
+            self._camera.stop_preview()
+            self._name = name
+            self._frame = np.array([])
             self._filename = filename
             self._side = side
             self._limit_of_frames = limit_of_frames
@@ -35,7 +47,11 @@ class CaptureData(modules.ModulesPackage):
             """Reads the frame from the video stream"""
             self._duplicate_frame = False
 
-            frame = self._camera.read()
+            frame = None
+            with picamera.array.PiRGBArray(self._camera, size=(self._width, self._height)) as stream:
+                self._camera.capture(stream, format="bgr", use_video_port=True)
+                frame = stream.array
+
             if self._frame.any():
                 if not (np.subtract(self._frame_orig, cv2.resize(frame, (320, 240))).any()):
                     self._duplicate_frame = True

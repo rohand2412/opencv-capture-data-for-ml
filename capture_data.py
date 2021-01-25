@@ -29,7 +29,7 @@ def main():
                 CaptureData.check_for_quit_request()
 
     except CaptureData.Break:
-        frame.get_camera().stop()
+        frame.get_camera().close()
         cv2.destroyAllWindows()
 
         fps.calculate(frame.get_num())
