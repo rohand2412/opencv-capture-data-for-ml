@@ -62,11 +62,10 @@ class CaptureData(modules.ModulesPackage):
         def preprocessing(self):
             """Preprocesses the frame"""
             if not self._duplicate_frame:
-                self._frame = cv2.flip(self._frame, 1)
-                self._frame = self._frame[int((self._height-self._side)/2):
-                                          int((self._height+self._side)/2),
-                                          int((self._width-self._side)/2):
-                                          int((self._width+self._side)/2)]
+                self._frame = cv2.flip(self._frame, -1)
+                self._frame = self._frame[0:self._height,
+                                          int((self._width-self._height)/2):
+                                          int((self._width+self._height)/2)]
 
                 if self._limit_of_frames:
                     self._buffer[self._num-1] = self._frame
@@ -84,7 +83,7 @@ class CaptureData(modules.ModulesPackage):
             """Saves all the frames from the video stream using a consistent naming convention"""
             self._buffer = np.array(self._buffer)
             for index in range(len(self._buffer)):
-                cv2.imwrite(self._filename + str(index+1) + ".jpg", self._buffer[index])
+                cv2.imwrite(self._filename + str(index+1) + ".jpg", cv2.resize(self._buffer[index], (self._side, self._side)))
 
         def get_filename(self):
             """Returns filename for saving frames"""
