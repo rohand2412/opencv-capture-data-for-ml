@@ -16,7 +16,7 @@ def main():
 
     fps = CaptureData.Fps()
 
-    frame = CaptureData.Frame(side=300, name="Cam", filename="img", limit_of_frames=args.limit_of_frames)
+    frame = CaptureData.Frame(side=300, name="Cam", filename=args.filename, limit_of_frames=args.limit_of_frames)
 
     try:
         while True:

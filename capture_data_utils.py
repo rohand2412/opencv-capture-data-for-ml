@@ -111,3 +111,5 @@ class CaptureData(modules.ModulesPackage):
                                      type=str, help="directory from which data will be displayed")
             cls._parser.add_argument("--limit-of-frames", default=None, type=int,
                                      help="number of frames that will be captured")
+            cls._parser.add_argument("--filename", default="img", type=str,
+                                     help="name that will be used to save images")
