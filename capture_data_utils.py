@@ -6,11 +6,12 @@ import picamera.array
 import time
 import numpy as np
 import cv2
-import modules
+import base_utils
+import camera_utils
 
-class CaptureData(modules.ModulesPackage):
+class CaptureData(base_utils.Packages):
     """Class that adapts parents modules for CaptureData"""
-    class Fps(modules.ModulesPackage.Fps):
+    class Fps(base_utils.Packages.Fps):
         """Computes Fps over a series of frames and their times"""
         def calculate(self, frame_num):
             """Calculates the fps based upon a series of stats"""
@@ -18,7 +19,7 @@ class CaptureData(modules.ModulesPackage):
             self._mean = np.sum(self._elapsed_times)/frame_num*1.0
             self._fps = 1.0 / self._mean
 
-    class Frame(modules.ModulesPackage.Frame):
+    class Frame(camera_utils.Packages.Frame):
         """Keeps track of all data regarding the video stream"""
         def __init__(self, name, side, filename, limit_of_frames=None):
             self._width = 640
@@ -76,7 +77,7 @@ class CaptureData(modules.ModulesPackage):
             if not self._duplicate_frame:
                 if self._limit_of_frames:
                     if self._num >= self._limit_of_frames:
-                        raise modules.ModulesPackage.Break
+                        raise base_utils.Packages.Break
                 self._num += 1
 
         def export_buffer(self):
@@ -101,7 +102,7 @@ class CaptureData(modules.ModulesPackage):
             """Returns running number of current frames"""
             return self._num
 
-    class InitBashArgs(modules.ModulesPackage.InitBashArgs):
+    class InitBashArgs(base_utils.Packages.InitBashArgs):
         """Initalizes the arguements present for bash execution which will be different for each
         application of this wrapper"""
         @classmethod
