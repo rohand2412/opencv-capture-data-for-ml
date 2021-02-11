@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""This script contains all of the modules used in this directory"""
+"""This script contains all of the base modules used in this directory"""
 
 import os
 import datetime
@@ -9,10 +9,9 @@ import string
 import argparse
 import numpy as np
 import cv2
-from imutils.video.pivideostream import PiVideoStream
 import pynput
 
-class ModulesPackage:
+class Packages:
     """Contains basic framework of all modules utilized in this directory"""
     KEYBOARD_PRESSED_STATE = True
     KEYBOARD_RELEASED_STATE = False
@@ -26,7 +25,7 @@ class ModulesPackage:
         """Quits if 'q' key is pressed"""
         if cv2.waitKey(1) & 0xFF == ord('q'):
             print(end="")
-            raise ModulesPackage.Break()
+            raise Packages.Break()
 
     class Break(Exception):
         """Emulates a break from within a function"""
@@ -124,7 +123,7 @@ class ModulesPackage:
         class ReadDir:
             """Class with methods to read and display from an images directory"""
             def __init__(self, target_dir, mode, delay=250):
-                self._keyboard = ModulesPackage.Keyboard()
+                self._keyboard = Packages.Keyboard()
                 self._target_dir = target_dir
                 self._mode = mode
                 self._names = []
@@ -136,14 +135,14 @@ class ModulesPackage:
                 self._delay = delay
                 self._left_key = "left"
                 self._right_key = "right"
-                self._left_key_state = ModulesPackage.KEYBOARD_RELEASED_STATE
-                self._right_key_state = ModulesPackage.KEYBOARD_RELEASED_STATE
+                self._left_key_state = Packages.KEYBOARD_RELEASED_STATE
+                self._right_key_state = Packages.KEYBOARD_RELEASED_STATE
                 self._left_key_action_type = None
                 self._right_key_action_type = None
                 self._left_tap_update = False
                 self._right_tap_update = False
 
-                if self._mode == ModulesPackage.READDIR_SLIDESHOW_MODE_KEYBOARD:
+                if self._mode == Packages.READDIR_SLIDESHOW_MODE_KEYBOARD:
                     self._keyboard.start()
 
             def read(self):
@@ -167,23 +166,23 @@ class ModulesPackage:
 
             def imshow(self):
                 """Display the image that is next up in the slideshow"""
-                if self._mode == ModulesPackage.READDIR_SLIDESHOW_MODE_DELAY:
+                if self._mode == Packages.READDIR_SLIDESHOW_MODE_DELAY:
                     if not self._start_delay:
                         cv2.imshow("slideshow", self._images[self._img_num])
-                elif self._mode == ModulesPackage.READDIR_SLIDESHOW_MODE_KEYBOARD:
+                elif self._mode == Packages.READDIR_SLIDESHOW_MODE_KEYBOARD:
                     cv2.imshow("slideshow", self._images[self._img_num])
 
             def update(self):
                 """Check if delay is completed or if delay needs to be reset"""
-                if self._mode == ModulesPackage.READDIR_SLIDESHOW_MODE_DELAY:
+                if self._mode == Packages.READDIR_SLIDESHOW_MODE_DELAY:
                     if not self._start_delay:
                         self._img_num += 1
                         if self._img_num >= len(self._images):
-                            raise ModulesPackage.Break
+                            raise Packages.Break
                         self._start_delay = datetime.datetime.now()
                     elif (datetime.datetime.now() - self._start_delay).total_seconds() >= (self._delay/1000.0):
                         self._start_delay = None
-                elif self._mode == ModulesPackage.READDIR_SLIDESHOW_MODE_KEYBOARD:
+                elif self._mode == Packages.READDIR_SLIDESHOW_MODE_KEYBOARD:
                     while not self._keyboard.get_events().empty():
                         event = self._keyboard.get_events().get()
                         if event.get_name() == self._left_key:
@@ -193,27 +192,27 @@ class ModulesPackage:
                             self._right_key_state = event.get_state()
                             self._right_key_action_type = event.get_action_type()
 
-                    if self._left_key_state == ModulesPackage.KEYBOARD_PRESSED_STATE and self._img_num > 0:
-                        if self._left_key_action_type == ModulesPackage.KEYBOARD_ACTION_TYPE_TAP and not self._left_tap_update:
+                    if self._left_key_state == Packages.KEYBOARD_PRESSED_STATE and self._img_num > 0:
+                        if self._left_key_action_type == Packages.KEYBOARD_ACTION_TYPE_TAP and not self._left_tap_update:
                             self._img_num -= 1
                             self._left_tap_update = True
-                        elif self._left_key_action_type == ModulesPackage.KEYBOARD_ACTION_TYPE_HOLD:
+                        elif self._left_key_action_type == Packages.KEYBOARD_ACTION_TYPE_HOLD:
                             self._img_num -= 1
-                    elif self._left_key_state == ModulesPackage.KEYBOARD_RELEASED_STATE:
+                    elif self._left_key_state == Packages.KEYBOARD_RELEASED_STATE:
                         self._left_tap_update = False
 
-                    if self._right_key_state == ModulesPackage.KEYBOARD_PRESSED_STATE and self._img_num < (len(self._images) - 1):
-                        if self._right_key_action_type == ModulesPackage.KEYBOARD_ACTION_TYPE_TAP and not self._right_tap_update:
+                    if self._right_key_state == Packages.KEYBOARD_PRESSED_STATE and self._img_num < (len(self._images) - 1):
+                        if self._right_key_action_type == Packages.KEYBOARD_ACTION_TYPE_TAP and not self._right_tap_update:
                             self._img_num += 1
                             self._right_tap_update = True
-                        elif self._right_key_action_type == ModulesPackage.KEYBOARD_ACTION_TYPE_HOLD:
+                        elif self._right_key_action_type == Packages.KEYBOARD_ACTION_TYPE_HOLD:
                             self._img_num += 1
-                    elif self._right_key_state == ModulesPackage.KEYBOARD_RELEASED_STATE:
+                    elif self._right_key_state == Packages.KEYBOARD_RELEASED_STATE:
                         self._right_tap_update = False
 
             def close(self):
                 """Deactivates keyboard if necessary"""
-                if self._mode == ModulesPackage.READDIR_SLIDESHOW_MODE_KEYBOARD:
+                if self._mode == Packages.READDIR_SLIDESHOW_MODE_KEYBOARD:
                     self._keyboard.stop()
 
             def get_target_dir(self):
@@ -235,7 +234,7 @@ class ModulesPackage:
     class Fps:
         """Computes Fps over a series of frames and their times"""
         def __init__(self):
-            self._timer = ModulesPackage.Timer()
+            self._timer = Packages.Timer()
             self._elapsed_times = np.array([])
             self._ms_to_seconds = 1.0/1000000.0
             self._mean = None
@@ -300,11 +299,11 @@ class ModulesPackage:
 
         def _on_press(self, key):
             """Callback for when key is pressed"""
-            self._produce(ModulesPackage.KEYBOARD_PRESSED_STATE, key)
+            self._produce(Packages.KEYBOARD_PRESSED_STATE, key)
 
         def _on_release(self, key):
             """Callback for when key is released"""
-            self._produce(ModulesPackage.KEYBOARD_RELEASED_STATE, key)
+            self._produce(Packages.KEYBOARD_RELEASED_STATE, key)
 
         def start(self):
             """Starts listening to the keyboard"""
@@ -345,7 +344,7 @@ class ModulesPackage:
             def __init__(self, name):
                 self._state = False
                 self._name = name
-                self._timer = ModulesPackage.Timer()
+                self._timer = Packages.Timer()
 
             @staticmethod
             def name(key):
@@ -359,9 +358,9 @@ class ModulesPackage:
                 """Sets the state of the key and start and stop the timer"""
                 if self._state != state:
                     self._state = state
-                    if self._state == ModulesPackage.KEYBOARD_PRESSED_STATE:
+                    if self._state == Packages.KEYBOARD_PRESSED_STATE:
                         self._timer.start()
-                    elif self._state == ModulesPackage.KEYBOARD_RELEASED_STATE:
+                    elif self._state == Packages.KEYBOARD_RELEASED_STATE:
                         self._timer.stop()
 
             def debug(self, debug):
@@ -376,9 +375,9 @@ class ModulesPackage:
                 tap_duration = 0.15
                 elapsed_time = self.get_elapsed_time()
                 if elapsed_time <= tap_duration:
-                    return ModulesPackage.KEYBOARD_ACTION_TYPE_TAP
+                    return Packages.KEYBOARD_ACTION_TYPE_TAP
                 else:
-                    return ModulesPackage.KEYBOARD_ACTION_TYPE_HOLD
+                    return Packages.KEYBOARD_ACTION_TYPE_HOLD
 
             def get_elapsed_time(self):
                 """Wraps Timer class' get_elapsed_time method"""
@@ -403,14 +402,14 @@ class ModulesPackage:
         def start(self):
             """Starts Timer"""
             if self._start_time is not None:
-                raise ModulesPackage.TimerError(f"Timer is already running. Use .stop() to stop it")
+                raise Packages.TimerError(f"Timer is already running. Use .stop() to stop it")
 
             self._start_time = time.perf_counter()
 
         def stop(self):
             """Stops Timer"""
             if self._start_time is None:
-                raise ModulesPackage.TimerError(f"Timer is not already running. Use .start() to \
+                raise Packages.TimerError(f"Timer is not already running. Use .start() to \
                                                 start it")
 
             self._elapsed_time = time.perf_counter() - self._start_time
@@ -426,13 +425,13 @@ class ModulesPackage:
         def update(self):
             """Activates callback and resets timer if specified amount of time has passed"""
             if self._callback is None:
-                raise ModulesPackage.TimerError(f"No callback specified. Please specify in \
+                raise Packages.TimerError(f"No callback specified. Please specify in \
                                                 constructor")
             if self._delay_ms is None:
-                raise ModulesPackage.TimerError(f"No delay specified. Please specify in \
+                raise Packages.TimerError(f"No delay specified. Please specify in \
                                                 constructor")
             if self._start_time is None:
-                raise ModulesPackage.TimerError(f"Timer is not already running. Cannot check \
+                raise Packages.TimerError(f"Timer is not already running. Cannot check \
                                                 elapsed time on inactive Timer.Use.start() to \
                                                 start it ")
 
