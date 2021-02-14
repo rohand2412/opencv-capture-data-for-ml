@@ -1,25 +1,14 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[ ]:
-
+#!/usr/bin/env python3
+"""This script will filter the data by division and export it"""
 
 import os
 import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
 
-
-# In[ ]:
-
-
 data_path = '/home/rohan/Documents/RCJ2021Repos/raspberry-pi-images-rcj/Evac/'
 save_path = '/home/rohan/Documents/RCJ2021Repos/raspberry-pi-images-rcj/Evac-Final-Images/'
 os.chdir(data_path)
-
-
-# In[ ]:
-
 
 def getOrderedPath(path):
     files = os.listdir(path)
@@ -48,12 +37,6 @@ def getOrderedPath(path):
     
     return files_ordered
 
-print(getOrderedPath("Test0"))
-
-
-# In[ ]:
-
-
 filter_factor = 5
 
 img_num = 0
@@ -74,12 +57,6 @@ for folder in getOrderedPath(os.getcwd()):
             img_paths[img_id // filter_factor] = folder + "/" + img
         img_id += 1
 
-print(img_paths)
-
-
-# In[ ]:
-
-
 display_photo = np.array(Image.open(img_paths[-1]))
 
 fig, ax = plt.subplots(1)
@@ -87,10 +64,6 @@ fig, ax = plt.subplots(1)
 ax.imshow(display_photo)
 
 plt.show()
-
-
-# In[ ]:
-
 
 img_format = "RGB"
 
@@ -100,10 +73,3 @@ for img in range(img_num):
         text = ''.join(filter(str.isalpha, os.path.splitext(os.path.basename(img_paths[img]))[0]))
         ext = os.path.splitext(os.path.basename(img_paths[img]))[1]
         image.save(save_path + text + str(img) + ext)
-
-
-# In[ ]:
-
-
-
-
