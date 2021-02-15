@@ -130,6 +130,7 @@ class Packages:
                 self._target_dir = target_dir
                 self._mode = mode
                 self._names = []
+                self._digits = []
                 self._text = None
                 self._ext = None
                 self._images = []
@@ -151,19 +152,20 @@ class Packages:
             def read(self):
                 """Cache or Load and Store the images in the target directory"""
                 self._names = os.listdir(self.get_target_dir())
+                self._digits = [None for name in self._names]
                 self._text, self._ext = os.path.splitext(self._names[0])
                 self._text = ''.join(filter(str.isalpha, self._text))
                 for i, name in enumerate(self._names):
-                    self._names[i] = int(''.join(filter(str.isdigit, name)))
-                self._names.sort()
-                self._names = [self._text + str(name) + self._ext for name in self._names]
+                    self._digits[i] = int(''.join(filter(str.isdigit, name)))
+                self._digits.sort()
+                self._names = [self._text + str(digit) + self._ext for digit in self._digits]
 
                 self._images = [None for name in self._names]
                 for i, name in enumerate(self._names):
                     self._images[i] = cv2.imread(self._target_dir+r'/'+name)
-                    self._images[i] = cv2.putText(self._images[i], text=str(i), org=(0, 25),
-                                                  fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=1,
-                                                  color=(0, 255, 0), thickness=2,
+                    self._images[i] = cv2.putText(self._images[i], text=str(self._digits[i]),
+                                                  org=(0, 25), fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                                                  fontScale=1, color=(0, 255, 0), thickness=2,
                                                   lineType=cv2.LINE_AA)
                 self._images = np.array(self._images)
 
