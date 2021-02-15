@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """This script contains all of the modules used in filter_data.py"""
 
-import os
-import numpy as np
 import base_utils
 
 class FilterData(base_utils.Packages):
