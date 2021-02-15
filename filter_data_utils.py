@@ -58,9 +58,9 @@ class FilterData(base_utils.Packages):
         def get_args(cls):
             """Returns data inputted from bash"""
             if not cls._args.input_dir:
-                raise FilterData.ArguementError(f"No input directory specified. Please specify \
-                                                '--input-dir' arguement")
+                raise FilterData.ArguementError(f"No input directory specified. Please specify" \
+                                                 + "'--input-dir' arguement")
             if not cls._args.output_dir:
-                raise FilterData.ArguementError(f"No output directory specified. Please specify \
-                                                '--output-dir' argument")
+                raise FilterData.ArguementError(f"No output directory specified. Please specify" \
+                                                 + "'--output-dir' argument")
             return cls._args
