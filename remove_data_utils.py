@@ -15,6 +15,8 @@ class RemoveData(base_utils.Packages):
                                      help="directory from which data will be removed")
             cls._parser.add_argument("--output-dir", default=None, type=str,
                                      help="directory at which pruned data will be saved")
+            cls._parser.add_argument("--trash-dir", default=None, type=str,
+                                     help="directory at which bad data will be saved")
             cls._parser.add_argument("--remove-ids", default=None, nargs='+', type=int,
                                      help="ids of data to be removed")
 
@@ -27,6 +29,9 @@ class RemoveData(base_utils.Packages):
             if not cls._args.output_dir:
                 raise base_utils.Packages.ArguementError(f"No output directory specified. Please" \
                                                           + " specify '--output-dir' argument")
+            if not cls._args.trash_dir:
+                raise base_utils.Packages.ArguementError(f"No trash directory specified. Please" \
+                                                          + " specify '--trash-dir' arguement")
             if not cls._args.remove_ids:
                 raise base_utils.Packages.ArguementError(f"No data to be removed specified." \
                                                           + " Please specify '--remove-ids'" \
