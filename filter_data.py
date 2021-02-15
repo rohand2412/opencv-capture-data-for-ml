@@ -35,7 +35,7 @@ def main():
             data = Image.open(file_paths[filename]).convert(file_format)
             text = ''.join(filter(str.isalpha, os.path.splitext(os.path.basename(file_paths[filename]))[0]))
             ext = os.path.splitext(os.path.basename(file_paths[filename]))[1]
-            data.save(output_dir + text + str(filename) + ext)
+            data.save(output_dir + text + str(filename + 1) + ext)
 
 if __name__ == '__main__':
     main()
