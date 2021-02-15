@@ -23,8 +23,8 @@ def main():
 
     file_id = 0
     file_paths = [None for filename in range(file_num)]
-    for folder in FilterData.get_ordered_path(os.getcwd()):
-        for filename in FilterData.get_ordered_path(folder):
+    for folder in FilterData.Dataset.get_ordered_path(os.getcwd()):
+        for filename in FilterData.Dataset.get_ordered_path(folder):
             if not file_id % filter_factor:
                 file_paths[file_id // filter_factor] = folder + '/' + filename
             file_id += 1
