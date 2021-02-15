@@ -33,6 +33,9 @@ class Packages:
     class TimerError(Exception):
         """Used to report errors from Timer class"""
 
+    class ArguementError(Exception):
+        """Used to report errors from InitBashArgs class"""
+
     class DirectoryManagement:
         """Manages the directory and has classes to write and read directories"""
         class WriteDir:

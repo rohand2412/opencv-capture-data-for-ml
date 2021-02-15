@@ -7,9 +7,6 @@ import base_utils
 
 class FilterData(base_utils.Packages):
     """Class that adapts parent's modules for FilterData"""
-    class ArguementError(Exception):
-        """Used to report errors from InitBashArgs class"""
-
     class InitBashArgs(base_utils.Packages.InitBashArgs):
         """Initalizes the arguements present for bash execution which will be different for each
         application of this wrapper """
@@ -27,9 +24,9 @@ class FilterData(base_utils.Packages):
         def get_args(cls):
             """Returns data inputted from bash"""
             if not cls._args.input_dir:
-                raise FilterData.ArguementError(f"No input directory specified. Please specify" \
-                                                 + "'--input-dir' arguement")
+                raise base_utils.Packages.ArguementError(f"No input directory specified. Please" \
+                                                          + " specify '--input-dir' arguement")
             if not cls._args.output_dir:
-                raise FilterData.ArguementError(f"No output directory specified. Please specify" \
-                                                 + "'--output-dir' argument")
+                raise base_utils.Packages.ArguementError(f"No output directory specified. Please" \
+                                                          + " specify '--output-dir' argument")
             return cls._args
