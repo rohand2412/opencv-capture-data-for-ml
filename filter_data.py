@@ -30,12 +30,12 @@ def main():
             file_id += 1
 
     file_format = "RGB"
+    file_new_format = ".png"
     for filename in range(file_num):
         if file_paths[filename]:
             data = Image.open(file_paths[filename]).convert(file_format)
             text = ''.join(filter(str.isalpha, os.path.splitext(os.path.basename(file_paths[filename]))[0]))
-            ext = os.path.splitext(os.path.basename(file_paths[filename]))[1]
-            data.save(output_dir + text + str(filename + 1) + ext)
+            data.save(output_dir + text + str(filename + 1) + file_new_format)
 
 if __name__ == '__main__':
     main()
