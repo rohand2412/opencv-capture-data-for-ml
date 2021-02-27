@@ -14,7 +14,7 @@ def main():
     os.chdir(trash_dir)
 
     for filename in GetRemoveData.Dataset.get_ordered_path(os.getcwd()):
-        print(''.join(filter(str.isdigit, filename)), " ")
+        print(''.join(filter(str.isdigit, filename)), end=" ")
 
 if __name__ == '__main__':
     main()
