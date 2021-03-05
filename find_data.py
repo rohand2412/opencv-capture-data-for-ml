@@ -24,7 +24,6 @@ def main():
 
         if np.array_equal(input_file, file_content):
             print(filename)
-            break
 
 if __name__ == '__main__':
     main()
