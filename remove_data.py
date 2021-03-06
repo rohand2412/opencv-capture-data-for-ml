@@ -17,7 +17,6 @@ def main():
 
     os.chdir(input_dir)
 
-    file_id = 1
     img_format = "RGB"
 
     for filename in RemoveData.Dataset.get_ordered_path(os.getcwd()):
@@ -27,8 +26,7 @@ def main():
         ext = os.path.splitext(filename)[1]
 
         if file_num not in remove_ids:
-            data.save(output_dir + text + str(file_id) + ext)
-            file_id += 1
+            data.save(output_dir + text + str(file_num) + ext)
         elif file_num in remove_ids:
             data.save(trash_dir + text + str(file_num) + ext)
 
