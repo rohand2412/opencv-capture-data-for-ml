@@ -46,3 +46,7 @@ class Packages:
         def get_height(self):
             """Returns raw height of frame"""
             return self._height
+        
+        def get_frame(self):
+            """Returns raw frame"""
+            return self._frame
