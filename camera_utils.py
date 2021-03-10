@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """This script contains all of the modules that are tied to the camera"""
 
+import picamera
+import time
 import numpy as np
 import cv2
 
@@ -12,14 +14,20 @@ class Packages:
         def __init__(self, name):
             self._width = 640
             self._height = 480
-            self._camera = PiVideoStream(resolution=(self._width, self._height)).start()
-            time.sleep(2.0)
+            self._camera = picamera.PiCamera()
+            self._camera.resolution = (self._width, self._height)
+            self._camera.framerate = 32
+            self._camera.start_preview()
+            time.sleep(0.1)
+            self._camera.stop_preview()
             self._name = name
             self._frame = np.array([])
 
         def capture_frame(self):
             """Reads the frame from the video stream"""
-            self._frame = self._camera.read()
+            with picamera.array.PiRGBArray(self._camera, size=(self._width, self._height)) as stream:
+                self._camera.capture(stream, format="bgr", use_video_port=True)
+                self._frame = stream.array
 
         def preprocessing(self):
             """Preprocesses the frame"""
