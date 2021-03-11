@@ -6,12 +6,12 @@ import picamera.array
 import time
 import numpy as np
 import cv2
-import base_utils
-import camera_utils
+from raspberry_pi_libraries import multi_wrapper
+from raspberry_pi_libraries import camera_wrapper
 
-class CaptureData(base_utils.Packages):
+class CaptureData(multi_wrapper.Packages):
     """Class that adapts parents modules for CaptureData"""
-    class Fps(base_utils.Packages.Fps):
+    class Fps(multi_wrapper.Packages.Fps):
         """Computes Fps over a series of frames and their times"""
         def calculate(self, frame_num):
             """Calculates the fps based upon a series of stats"""
@@ -19,7 +19,7 @@ class CaptureData(base_utils.Packages):
             self._mean = np.sum(self._elapsed_times)/frame_num*1.0
             self._fps = 1.0 / self._mean
 
-    class Frame(camera_utils.Packages.Frame):
+    class Frame(camera_wrapper.Packages.Frame):
         """Keeps track of all data regarding the video stream"""
         def __init__(self, name, side, filename, limit_of_frames=None):
             self._width = 640
@@ -77,7 +77,7 @@ class CaptureData(base_utils.Packages):
             if not self._duplicate_frame:
                 if self._limit_of_frames:
                     if self._num >= self._limit_of_frames:
-                        raise base_utils.Packages.Break
+                        raise multi_wrapper.Packages.Break
                 self._num += 1
 
         def export_buffer(self):
@@ -102,7 +102,7 @@ class CaptureData(base_utils.Packages):
             """Returns running number of current frames"""
             return self._num
 
-    class InitBashArgs(base_utils.Packages.InitBashArgs):
+    class InitBashArgs(multi_wrapper.Packages.InitBashArgs):
         """Initalizes the arguements present for bash execution which will be different for each
         application of this wrapper"""
         @classmethod

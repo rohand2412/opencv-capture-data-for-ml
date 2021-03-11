@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """This script contains all of the modules used in filter_data.py"""
 
-import base_utils
+from raspberry_pi_libraries import multi_wrapper
 
-class FilterData(base_utils.Packages):
+class FilterData(multi_wrapper.Packages):
     """Class that adapts parent's modules for FilterData"""
-    class InitBashArgs(base_utils.Packages.InitBashArgs):
+    class InitBashArgs(multi_wrapper.Packages.InitBashArgs):
         """Initalizes the arguements present for bash execution which will be different for each
         application of this wrapper """
         @classmethod
@@ -22,9 +22,9 @@ class FilterData(base_utils.Packages):
         def get_args(cls):
             """Returns data inputted from bash"""
             if not cls._args.input_dir:
-                raise base_utils.Packages.ArguementError(f"No input directory specified. Please" \
-                                                          + " specify '--input-dir' arguement")
+                raise multi_wrapper.Packages.ArguementError(f"No input directory specified. Please" \
+                                                             + " specify '--input-dir' arguement")
             if not cls._args.output_dir:
-                raise base_utils.Packages.ArguementError(f"No output directory specified. Please" \
-                                                          + " specify '--output-dir' argument")
+                raise multi_wrapper.Packages.ArguementError(f"No output directory specified. Please" \
+                                                             + " specify '--output-dir' argument")
             return cls._args

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """This script contains all of the modules used in find_data.py"""
 
-import base_utils
+from raspberry_pi_libraries import multi_wrapper
 
-class FindData(base_utils.Packages):
+class FindData(multi_wrapper.Packages):
     """Class that adapts parent's modules for FindData"""
-    class InitBashArgs(base_utils.Packages.InitBashArgs):
+    class InitBashArgs(multi_wrapper.Packages.InitBashArgs):
         """Initalizes the arguements present for bash execution which will be different for each
         application of this wrapper """
         @classmethod
@@ -20,10 +20,10 @@ class FindData(base_utils.Packages):
         def get_args(cls):
             """Returns data inputted from bash"""
             if not cls._args.input_file:
-                raise base_utils.Packages.ArguementError(f"No input file specified. Please" \
+                raise multi_wrapper.Packages.ArguementError(f"No input file specified. Please" \
                                                           + " specify '--input-file' arguement")
             if not cls._args.find_dir:
-                raise base_utils.Packages.ArguementError(f"No find directory specified. Please" \
+                raise multi_wrapper.Packages.ArguementError(f"No find directory specified. Please" \
                                                           + " specify '--find-dir' arguement")
 
             return cls._args
