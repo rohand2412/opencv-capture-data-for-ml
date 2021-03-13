@@ -1,10 +1,14 @@
+#!/usr/bin/env python3
+"""Converts directory of xmls into singular csv"""
+
 import os
 import glob
-import pandas as pd
 import xml.etree.ElementTree as ET
-
+import pandas as pd
+from xml_to_csv_utils import XmlToCsv
 
 def xml_to_csv(path):
+    """Returns pandas dataframe with xml data"""
     xml_list = []
     for xml_file in glob.glob(path + '/*.xml'):
         tree = ET.parse(xml_file)
@@ -26,10 +30,18 @@ def xml_to_csv(path):
 
 
 def main():
-    image_path = os.path.join(os.getcwd(), 'annotations')
-    xml_df = xml_to_csv(image_path)
-    xml_df.to_csv('raccoon_labels.csv', index=None)
-    print('Successfully converted xml to csv.')
+    """Main code"""
+    XmlToCsv.InitBashArgs()
+    args = XmlToCsv.InitBashArgs.get_args()
 
+    test_xml_dir = args.test_xml_dir
+    train_xml_dir = args.train_xml_dir
+    csv_dir = args.csv_dir
 
-main()
+    for i, directory in enumerate([train_xml_dir, test_xml_dir]):
+        labels_dir = os.path.join(directory, "")
+        xml_df = xml_to_csv(labels_dir)
+        xml_df.to_csv(csv_dir + '{}_labels.csv'.format(["train", "test"][i]), index=None)
+
+if __name__ == '__main__':
+    main()
