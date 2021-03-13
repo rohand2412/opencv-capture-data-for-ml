@@ -23,6 +23,9 @@ def main():
         for path in myroot.iter('path'):
             path.text = img_dir + text + img_ext
 
+        for xml_filename in myroot.iter('filename'):
+            xml_filename.text = text + img_ext
+
         mytree.write(xml_dir + filename)
 
 if __name__ == '__main__':
