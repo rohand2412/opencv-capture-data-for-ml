@@ -38,6 +38,7 @@ def main():
                           ((frame.get_width() - frame.get_height()) // 2) + frame.get_height()]
 
             image = cv2.resize(image, (input_width, input_height))
+            image = cv2.flip(image, -1)
 
             image_input = np.expand_dims(image, axis=0)
             image_input = np.round(image_input).astype(np.uint8)
@@ -50,12 +51,10 @@ def main():
             scores  = interpreter.get_tensor(output_details[2]['index'])
             num     = interpreter.get_tensor(output_details[3]['index'])
 
-            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-
             labels = ["dead", "alive"]
 
             for i in range(int(num[0])):
-                if scores[0][i] > 0.5:
+                if (((boxes[0][i][3] - boxes[0][i][1]) / (boxes[0][i][2] - boxes[0][i][0])) < 1.25) and scores[0][i] > 0.25:
                     scores[0][i] = np.round(scores[0][i] * 100) / 100
                     image = cv2.rectangle(image,
                                         (int(boxes[0][i][1]*input_width),
