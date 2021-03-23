@@ -62,7 +62,7 @@ def main():
                                         (int(boxes[0][i][3]*input_width),
                                         int(boxes[0][i][2]*input_height)),
                                         (0, 0, 255), 1)
-                    image = cv2.putText(image, labels[int(classes[0][i])],
+                    image = cv2.putText(image, labels[int(classes[0][i] + 0.5)],
                                         (int(boxes[0][i][1]*input_width),
                                         int(boxes[0][i][0]*input_height)),
                                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255),
