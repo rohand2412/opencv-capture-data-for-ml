@@ -51,10 +51,10 @@ def main():
             scores  = interpreter.get_tensor(output_details[2]['index'])
             num     = interpreter.get_tensor(output_details[3]['index'])
 
-            labels = ["dead", "alive"]
+            labels = ["zone"]
 
             for i in range(int(num[0])):
-                if (((boxes[0][i][3] - boxes[0][i][1]) / (boxes[0][i][2] - boxes[0][i][0])) < 1.25) and scores[0][i] > 0.25:
+                if (((boxes[0][i][3] - boxes[0][i][1]) / (boxes[0][i][2] - boxes[0][i][0])) > 1.5) and scores[0][i] > 0.25:
                     scores[0][i] = np.round(scores[0][i] * 100) / 100
                     image = cv2.rectangle(image,
                                         (int(boxes[0][i][1]*input_width),
