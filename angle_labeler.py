@@ -127,7 +127,7 @@ def main():
            IMAGES_TOTAL_NUM, IMAGE_SIZE, IMAGE_NAMES
 
     LABELS_PATH = "/home/rohan/Documents/RCJ2021Repos/raspberry-pi-images-rcj/Line/Final-Labels/labels.csv"
-    IMAGES_DIR = "/home/rohan/Documents/RCJ2021Repos/raspberry-pi-images-rcj/Evac-Subset-300/Final-Images/"
+    IMAGES_DIR = "/home/rohan/Documents/RCJ2021Repos/raspberry-pi-images-rcj/Line-Squares/Final-Images/"
 
     keyboard = multi_wrapper.Packages.Keyboard()
     keyboard.start()
@@ -138,10 +138,10 @@ def main():
     images = {}
     for i, _ in enumerate(IMAGE_NAMES):
         IMAGE_NAMES[i] = os.path.splitext(IMAGE_NAMES[i])[0]
-        images[IMAGE_NAMES[i]] = cv2.imread(IMAGES_DIR + IMAGE_NAMES[i] + image_file_ext)
+    images[IMAGE_NAMES[image_num]] = cv2.imread(IMAGES_DIR + IMAGE_NAMES[image_num] + image_file_ext)
 
-    IMAGES_TOTAL_NUM = len(images)
-    IMAGE_SIZE = images[IMAGE_NAMES[0]].shape[0]
+    IMAGES_TOTAL_NUM = len(IMAGE_NAMES)
+    IMAGE_SIZE = images[IMAGE_NAMES[image_num]].shape[0]
 
     if os.path.isfile(LABELS_PATH):
         labels = pd.read_csv(LABELS_PATH, index_col=0)
@@ -208,6 +208,9 @@ def main():
             s_key.trigger_callback()
             space_key.trigger_callback()
             e_key.trigger_callback()
+
+            if not IMAGE_NAMES[image_num] in images:
+                images[IMAGE_NAMES[image_num]] = cv2.imread(IMAGES_DIR + IMAGE_NAMES[image_num] + image_file_ext)
 
             if labels.loc[IMAGE_NAMES[image_num], "labeled"]:
                 image_draw = cv2.circle(images[IMAGE_NAMES[image_num]].copy(),
