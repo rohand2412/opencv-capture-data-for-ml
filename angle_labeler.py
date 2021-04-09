@@ -2,76 +2,171 @@ import os
 import cv2
 import pickle
 import enum
+import numpy as np
+import pandas as pd
 from raspberry_pi_libraries import multi_wrapper
+
+LABELS_DIR = None
+IMAGES_DIR = None
+IMAGES_TOTAL_NUM = None
+IMAGE_SIZE = None
+IMAGE_NAMES = None
 
 class State(enum.Enum):
     """Store state of labeler"""
     BROWSE = 0
     EDIT = 1
 
+class Key:
+    """Stores important key data"""
+    def __init__(self, name, callback):
+        self._name = name
+        self._callback = callback
+        self._state = multi_wrapper.Packages.KEYBOARD_RELEASED_STATE
+        self._action_type = None
+        self._tap_status = None
+
+    def update(self, event):
+        """Update data with latest event info"""
+        if event.get_name() == self._name:
+            self._state = event.get_state()
+            self._action_type = event.get_action_type()
+
+    def trigger_callback(self):
+        """Update tap status and trigger callback"""
+        if self._state == multi_wrapper.Packages.KEYBOARD_PRESSED_STATE:
+            if self._action_type == multi_wrapper.Packages.KEYBOARD_ACTION_TYPE_TAP and not self._tap_status:
+                self._callback()
+                self._tap_status = True
+            elif self._action_type == multi_wrapper.Packages.KEYBOARD_ACTION_TYPE_HOLD:
+                self._callback()
+        elif self._state == multi_wrapper.Packages.KEYBOARD_RELEASED_STATE:
+            self._tap_status = False
+
+    def set_state(self, new_state):
+        """Set state"""
+        self._state = new_state
+
+    def set_action_type(self, new_action_type):
+        """Set action type"""
+        self._action_type = new_action_type
+
+    def set_tap_status(self, new_tap_status):
+        """Set status of tap"""
+        self._tap_status = new_tap_status
+
+    def get_state(self):
+        """Access state"""
+        return self._state
+
+    def get_action_type(self):
+        """Access action type"""
+        return self._action_type
+
+    def get_tap_status(self):
+        """Access tap status"""
+        return self._tap_status
+
+    def get_name(self):
+        """Return key event name"""
+        return self._name
+
+image_num = 0
+state = State.BROWSE
+labels = None
+
+def left_key_callback():
+    """Executes upon press of left key"""
+    global image_num, state, IMAGE_NAMES, labels
+    if state == State.BROWSE and image_num > 0:
+        image_num -= 1
+    elif state == State.EDIT and labels.loc[IMAGE_NAMES[image_num]]["x"] > 0:
+        labels.loc[IMAGE_NAMES[image_num]]["x"] -= 1
+
+def right_key_callback():
+    """Executes upon press of right key"""
+    global image_num, state, IMAGES_TOTAL_NUM, IMAGE_NAMES, labels
+    if state == State.BROWSE and image_num < IMAGES_TOTAL_NUM - 1:
+        image_num += 1
+    elif state == State.EDIT and labels.loc[IMAGE_NAMES[image_num]]["x"] < IMAGE_SIZE - 1:
+        labels.loc[IMAGE_NAMES[image_num]]["x"] += 1
+
+def up_key_callback():
+    """Executes upon press of up key"""
+    global image_num, state, IMAGE_NAMES, labels
+    if state == State.EDIT and labels.loc[IMAGE_NAMES[image_num]]["y"] > 0:
+        labels.loc[IMAGE_NAMES[image_num]]["y"] -= 1
+
+def down_key_callback():
+    """Executes upon press of down key"""
+    global image_num, state, IMAGE_NAMES, labels
+    if state == State.EDIT and labels.loc[IMAGE_NAMES[image_num]]["y"] < IMAGE_SIZE - 1:
+        labels.loc[IMAGE_NAMES[image_num]]["y"] += 1
+
+def enter_key_callback():
+    """Executes upon press of enter key"""
+    global state
+    if state == State.BROWSE:
+        state = State.EDIT
+    elif state == State.EDIT:
+        state = State.BROWSE
+
 def main():
+    """Main code"""
+    global image_num, state, labels, LABELS_DIR, IMAGES_DIR, \
+           IMAGES_TOTAL_NUM, IMAGE_SIZE, IMAGE_NAMES
 
-    state = State.BROWSE
-
-    labels_dir = ""
-    images_dir = "/home/rohan/Documents/RCJ2021Repos/raspberry-pi-images-rcj/Evac-Subset-300/Final-Images/"
+    LABELS_DIR = ""
+    IMAGES_DIR = "/home/rohan/Documents/RCJ2021Repos/raspberry-pi-images-rcj/Evac-Subset-300/Final-Images/"
 
     keyboard = multi_wrapper.Packages.Keyboard()
     keyboard.start()
 
-    image_names = multi_wrapper.Packages.Dataset.get_ordered_path(images_dir)
-    image_file_ext = os.path.splitext(os.listdir(images_dir)[0])[1]
+    IMAGE_NAMES = multi_wrapper.Packages.Dataset.get_ordered_path(IMAGES_DIR)
+    image_file_ext = os.path.splitext(os.listdir(IMAGES_DIR)[0])[1]
 
     images = {}
-    for i, _ in enumerate(image_names):
-        image_names[i] = os.path.splitext(image_names[i])[0]
-        images[image_names[i]] = cv2.imread(images_dir + image_names[i] + image_file_ext)
+    for i, _ in enumerate(IMAGE_NAMES):
+        IMAGE_NAMES[i] = os.path.splitext(IMAGE_NAMES[i])[0]
+        images[IMAGE_NAMES[i]] = cv2.imread(IMAGES_DIR + IMAGE_NAMES[i] + image_file_ext)
 
-    image_num = 0
+    IMAGES_TOTAL_NUM = len(images)
+    IMAGE_SIZE = images[IMAGE_NAMES[0]].shape[0]
 
-    left_key = "left"
-    left_key_state = False
-    left_key_action_type = None
-    left_tap_update = False
-    right_key = "right"
-    right_key_state = False
-    right_key_action_type = None
-    right_tap_update = False
+    labels = pd.DataFrame([0 for i, _ in enumerate(IMAGE_NAMES)], columns=["angle"])
+    labels = labels.assign(x=[IMAGE_SIZE // 2 for i, _ in enumerate(IMAGE_NAMES)])
+    labels = labels.assign(y=[0 for i, _ in enumerate(IMAGE_NAMES)])
+    labels.index = IMAGE_NAMES
+
+    left_key = Key("left", left_key_callback)
+    right_key = Key("right", right_key_callback)
+    up_key = Key("up", up_key_callback)
+    down_key = Key("down", down_key_callback)
+    enter_key = Key("enter", enter_key_callback)
 
     try:
         while True:
-            cv2.imshow("image", images[image_names[image_num]])
             while not keyboard.get_events().empty():
                 event = keyboard.get_events().get()
                 print(event.get_name())
-                if event.get_name() == left_key:
-                    left_key_state = event.get_state()
-                    left_key_action_type = event.get_action_type()
-                elif event.get_name() == right_key:
-                    right_key_state = event.get_state()
-                    right_key_action_type = event.get_action_type()
+                left_key.update(event)
+                right_key.update(event)
+                up_key.update(event)
+                down_key.update(event)
+                enter_key.update(event)
 
-            if state == State.BROWSE:            
-                if left_key_state == multi_wrapper.Packages.KEYBOARD_PRESSED_STATE and image_num > 0:
-                    if left_key_action_type == multi_wrapper.Packages.KEYBOARD_ACTION_TYPE_TAP and not left_tap_update:
-                        image_num -= 1
-                        left_tap_update = True
-                    elif left_key_action_type == multi_wrapper.Packages.KEYBOARD_ACTION_TYPE_HOLD:
-                        image_num -= 1
-                elif left_key_state == multi_wrapper.Packages.KEYBOARD_RELEASED_STATE:
-                    left_tap_update = False
+            left_key.trigger_callback()
+            right_key.trigger_callback()
+            up_key.trigger_callback()
+            down_key.trigger_callback()
+            enter_key.trigger_callback()
 
-                if right_key_state == multi_wrapper.Packages.KEYBOARD_PRESSED_STATE and image_num < (len(images) - 1):
-                    if right_key_action_type == multi_wrapper.Packages.KEYBOARD_ACTION_TYPE_TAP and not right_tap_update:
-                        image_num += 1
-                        right_tap_update = True
-                    elif right_key_action_type == multi_wrapper.Packages.KEYBOARD_ACTION_TYPE_HOLD:
-                        image_num += 1
-                elif right_key_state == multi_wrapper.Packages.KEYBOARD_RELEASED_STATE:
-                    right_tap_update = False
-            elif state == State.EDIT:
-                pass
+            image_draw = cv2.circle(images[IMAGE_NAMES[image_num]].copy(),
+                                    (labels.loc[IMAGE_NAMES[image_num]]["x"],
+                                     labels.loc[IMAGE_NAMES[image_num]]["y"]),
+                                    radius=2, color=(0, 255, 0), thickness=-1)
 
+            cv2.imshow("image", cv2.resize(image_draw, (IMAGE_SIZE * 2, IMAGE_SIZE * 2)))
             multi_wrapper.Packages.check_for_quit_request()
 
     except multi_wrapper.Packages.Break:
