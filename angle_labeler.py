@@ -145,6 +145,11 @@ def main():
     up_key = Key("up", up_key_callback)
     down_key = Key("down", down_key_callback)
     enter_key = Key("enter", enter_key_callback)
+    a_key = Key("a", left_key_callback)
+    d_key = Key("d", right_key_callback)
+    w_key = Key("w", up_key_callback)
+    s_key = Key("s", down_key_callback)
+    space_key = Key("space", enter_key_callback)
 
     ROBOT = {"x": IMAGE_SIZE//2, "y": IMAGE_SIZE - 1}
 
@@ -158,12 +163,22 @@ def main():
                 up_key.update(event)
                 down_key.update(event)
                 enter_key.update(event)
+                a_key.update(event)
+                d_key.update(event)
+                w_key.update(event)
+                s_key.update(event)
+                space_key.update(event)
 
             left_key.trigger_callback()
             right_key.trigger_callback()
             up_key.trigger_callback()
             down_key.trigger_callback()
             enter_key.trigger_callback()
+            a_key.trigger_callback()
+            d_key.trigger_callback()
+            w_key.trigger_callback()
+            s_key.trigger_callback()
+            space_key.trigger_callback()
 
             if labels.loc[IMAGE_NAMES[image_num], "labeled"]:
                 image_draw = cv2.circle(images[IMAGE_NAMES[image_num]].copy(),
