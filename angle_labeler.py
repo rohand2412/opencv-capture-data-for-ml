@@ -10,6 +10,7 @@ IMAGES_DIR = None
 IMAGES_TOTAL_NUM = None
 IMAGE_SIZE = None
 IMAGE_NAMES = None
+SHOW_ANGLE = False
 
 class State(enum.Enum):
     """Store state of labeler"""
@@ -121,10 +122,15 @@ def backspace_key_callback():
         labels.loc[IMAGE_NAMES[image_num], "y"] = 0
         labels.loc[IMAGE_NAMES[image_num], "labeled"] = False
 
+def shift_key_callback():
+    """Executes upon press of shift key"""
+    global SHOW_ANGLE
+    SHOW_ANGLE = not SHOW_ANGLE
+
 def main():
     """Main code"""
     global image_num, state, labels, LABELS_PATH, IMAGES_DIR, \
-           IMAGES_TOTAL_NUM, IMAGE_SIZE, IMAGE_NAMES
+           IMAGES_TOTAL_NUM, IMAGE_SIZE, IMAGE_NAMES, SHOW_ANGLE
 
     LABELS_PATH = "/home/rohan/Documents/RCJ2021Repos/raspberry-pi-images-rcj/Line/Final-Labels/labels.csv"
     IMAGES_DIR = "/home/rohan/Documents/RCJ2021Repos/raspberry-pi-images-rcj/Line-Squares/Final-Images/"
@@ -174,6 +180,8 @@ def main():
     s_key = Key("s", down_key_callback)
     space_key = Key("space", enter_key_callback)
     e_key = Key("e", backspace_key_callback)
+    shift_key = Key("shift", shift_key_callback)
+    shift_right_key = Key("shift_r", shift_key_callback)
 
     ROBOT = {"x": IMAGE_SIZE//2, "y": IMAGE_SIZE - 1}
 
@@ -195,6 +203,8 @@ def main():
                 s_key.update(event)
                 space_key.update(event)
                 e_key.update(event)
+                shift_key.update(event)
+                shift_right_key.update(event)
 
             left_key.trigger_callback()
             right_key.trigger_callback()
@@ -208,6 +218,8 @@ def main():
             s_key.trigger_callback()
             space_key.trigger_callback()
             e_key.trigger_callback()
+            shift_key.trigger_callback()
+            shift_right_key.trigger_callback()
 
             if not IMAGE_NAMES[image_num] in images:
                 images[IMAGE_NAMES[image_num]] = cv2.imread(IMAGES_DIR + IMAGE_NAMES[image_num] + image_file_ext)
@@ -222,6 +234,17 @@ def main():
                                     labels.loc[IMAGE_NAMES[image_num], "y"]),
                                     (ROBOT["x"], ROBOT["y"]),
                                     color=(0, 255, 0), thickness=1)
+                
+                if SHOW_ANGLE:
+                    ((width, height), baseline) = cv2.getTextSize(text="angle: " + str(labels.loc[IMAGE_NAMES[image_num], "angle"]),
+                                                                  fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                                                                  fontScale=0.5, thickness=1)
+
+                    image_draw = cv2.putText(image_draw,
+                                             text="angle: " + str(labels.loc[IMAGE_NAMES[image_num], "angle"]),
+                                             org=(IMAGE_SIZE - width, IMAGE_SIZE - height + baseline), fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                                             fontScale=0.5, color=(0, 255, 0), thickness=1,
+                                             lineType=cv2.LINE_AA)
 
                 cv2.imshow("image", cv2.resize(image_draw, (IMAGE_SIZE * 2, IMAGE_SIZE * 2)))
 
