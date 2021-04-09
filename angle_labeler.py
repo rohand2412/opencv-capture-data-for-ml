@@ -10,7 +10,8 @@ IMAGES_DIR = None
 IMAGES_TOTAL_NUM = None
 IMAGE_SIZE = None
 IMAGE_NAMES = None
-SHOW_ANGLE = False
+SHOW_ANGLE = True
+ROBOT = None
 
 class State(enum.Enum):
     """Store state of labeler"""
@@ -75,6 +76,24 @@ image_num = 0
 state = State.BROWSE
 labels = None
 
+def compute_angle():
+    global image_num, IMAGE_NAMES, labels, ROBOT
+    angle = None
+    if not ROBOT["y"] - labels.loc[IMAGE_NAMES[image_num], "y"] == 0:
+        angle = np.arctan((labels.loc[IMAGE_NAMES[image_num], "x"] - ROBOT["x"])
+                          / (ROBOT["y"] - labels.loc[IMAGE_NAMES[image_num], "y"]))
+        angle = np.rad2deg(angle)
+        angle = round(angle * 100)/100
+    else:
+        if labels.loc[IMAGE_NAMES[image_num], "x"] - ROBOT["x"] > 0:
+            angle = float(90)
+        elif labels.loc[IMAGE_NAMES[image_num], "x"] - ROBOT["x"] < 0:
+            angle = float(-90)
+        else:
+            angle = float(0)
+
+    labels.loc[IMAGE_NAMES[image_num], "angle"] = angle
+
 def left_key_callback():
     """Executes upon press of left key"""
     global image_num, state, IMAGE_NAMES, labels
@@ -82,6 +101,7 @@ def left_key_callback():
         image_num -= 1
     elif state == State.EDIT and labels.loc[IMAGE_NAMES[image_num], "x"] > 0:
         labels.loc[IMAGE_NAMES[image_num], "x"] -= 1
+        compute_angle()
 
 def right_key_callback():
     """Executes upon press of right key"""
@@ -90,18 +110,21 @@ def right_key_callback():
         image_num += 1
     elif state == State.EDIT and labels.loc[IMAGE_NAMES[image_num], "x"] < IMAGE_SIZE - 1:
         labels.loc[IMAGE_NAMES[image_num], "x"] += 1
+        compute_angle()
 
 def up_key_callback():
     """Executes upon press of up key"""
     global image_num, state, IMAGE_NAMES, labels
     if state == State.EDIT and labels.loc[IMAGE_NAMES[image_num], "y"] > 0:
         labels.loc[IMAGE_NAMES[image_num], "y"] -= 1
+        compute_angle()
 
 def down_key_callback():
     """Executes upon press of down key"""
     global image_num, state, IMAGE_NAMES, labels
     if state == State.EDIT and labels.loc[IMAGE_NAMES[image_num], "y"] < IMAGE_SIZE - 1:
         labels.loc[IMAGE_NAMES[image_num], "y"] += 1
+        compute_angle()
 
 def enter_key_callback():
     """Executes upon press of enter key"""
@@ -130,7 +153,7 @@ def shift_key_callback():
 def main():
     """Main code"""
     global image_num, state, labels, LABELS_PATH, IMAGES_DIR, \
-           IMAGES_TOTAL_NUM, IMAGE_SIZE, IMAGE_NAMES, SHOW_ANGLE
+           IMAGES_TOTAL_NUM, IMAGE_SIZE, IMAGE_NAMES, SHOW_ANGLE, ROBOT
 
     LABELS_PATH = "/home/rohan/Documents/RCJ2021Repos/raspberry-pi-images-rcj/Line/Final-Labels/labels.csv"
     IMAGES_DIR = "/home/rohan/Documents/RCJ2021Repos/raspberry-pi-images-rcj/Line-Squares/Final-Images/"
@@ -148,6 +171,7 @@ def main():
 
     IMAGES_TOTAL_NUM = len(IMAGE_NAMES)
     IMAGE_SIZE = images[IMAGE_NAMES[image_num]].shape[0]
+    ROBOT = {"x": IMAGE_SIZE//2, "y": IMAGE_SIZE - 1}
 
     if os.path.isfile(LABELS_PATH):
         labels = pd.read_csv(LABELS_PATH, index_col=0)
@@ -183,14 +207,11 @@ def main():
     shift_key = Key("shift", shift_key_callback)
     shift_right_key = Key("shift_r", shift_key_callback)
 
-    ROBOT = {"x": IMAGE_SIZE//2, "y": IMAGE_SIZE - 1}
-
     try:
         while True:
             keyboard.update_events()
             while not keyboard.get_events().empty():
                 event = keyboard.get_events().get()
-                print(event.get_name())
                 left_key.update(event)
                 right_key.update(event)
                 up_key.update(event)
