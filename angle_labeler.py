@@ -1,12 +1,11 @@
 import os
 import cv2
-import pickle
 import enum
 import numpy as np
 import pandas as pd
 from raspberry_pi_libraries import multi_wrapper
 
-LABELS_DIR = None
+LABELS_PATH = None
 IMAGES_DIR = None
 IMAGES_TOTAL_NUM = None
 IMAGE_SIZE = None
@@ -124,10 +123,10 @@ def backspace_key_callback():
 
 def main():
     """Main code"""
-    global image_num, state, labels, LABELS_DIR, IMAGES_DIR, \
+    global image_num, state, labels, LABELS_PATH, IMAGES_DIR, \
            IMAGES_TOTAL_NUM, IMAGE_SIZE, IMAGE_NAMES
 
-    LABELS_DIR = ""
+    LABELS_PATH = "/home/rohan/Documents/RCJ2021Repos/raspberry-pi-images-rcj/Line/Final-Labels/labels.csv"
     IMAGES_DIR = "/home/rohan/Documents/RCJ2021Repos/raspberry-pi-images-rcj/Evac-Subset-300/Final-Images/"
 
     keyboard = multi_wrapper.Packages.Keyboard()
@@ -144,11 +143,24 @@ def main():
     IMAGES_TOTAL_NUM = len(images)
     IMAGE_SIZE = images[IMAGE_NAMES[0]].shape[0]
 
-    labels = pd.DataFrame([0 for i, _ in enumerate(IMAGE_NAMES)], columns=["angle"])
-    labels = labels.assign(x=[IMAGE_SIZE // 2 for i, _ in enumerate(IMAGE_NAMES)])
-    labels = labels.assign(y=[0 for i, _ in enumerate(IMAGE_NAMES)])
-    labels = labels.assign(labeled=[False for i, _ in enumerate(IMAGE_NAMES)])
-    labels.index = IMAGE_NAMES
+    if os.path.isfile(LABELS_PATH):
+        labels = pd.read_csv(LABELS_PATH, index_col=0)
+        index_list = list(labels.index)
+        if index_list != IMAGE_NAMES:
+            index_hash = set(index_list)
+            new_indices = [name for name in IMAGE_NAMES if name not in index_hash]
+            new_labels = pd.DataFrame([0 for i, _ in enumerate(new_indices)], columns=["angle"])
+            new_labels = new_labels.assign(x=[IMAGE_SIZE // 2 for i, _ in enumerate(new_indices)])
+            new_labels = new_labels.assign(y=[0 for i, _ in enumerate(new_indices)])
+            new_labels = new_labels.assign(labeled=[False for i, _ in enumerate(new_indices)])
+            new_labels.index = new_indices
+            labels = pd.concat([labels, new_labels])
+    else:
+        labels = pd.DataFrame([0 for i, _ in enumerate(IMAGE_NAMES)], columns=["angle"])
+        labels = labels.assign(x=[IMAGE_SIZE // 2 for i, _ in enumerate(IMAGE_NAMES)])
+        labels = labels.assign(y=[0 for i, _ in enumerate(IMAGE_NAMES)])
+        labels = labels.assign(labeled=[False for i, _ in enumerate(IMAGE_NAMES)])
+        labels.index = IMAGE_NAMES
 
     left_key = Key("left", left_key_callback)
     right_key = Key("right", right_key_callback)
@@ -218,6 +230,7 @@ def main():
 
     except multi_wrapper.Packages.Break:
         cv2.destroyAllWindows()
+        labels.to_csv(LABELS_PATH)
 
 if __name__ == '__main__':
     main()
