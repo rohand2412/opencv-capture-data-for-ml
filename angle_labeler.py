@@ -167,6 +167,7 @@ def main():
 
     try:
         while True:
+            keyboard.update_events()
             while not keyboard.get_events().empty():
                 event = keyboard.get_events().get()
                 print(event.get_name())
