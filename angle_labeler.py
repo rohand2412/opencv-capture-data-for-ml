@@ -80,34 +80,35 @@ def left_key_callback():
     global image_num, state, IMAGE_NAMES, labels
     if state == State.BROWSE and image_num > 0:
         image_num -= 1
-    elif state == State.EDIT and labels.loc[IMAGE_NAMES[image_num]]["x"] > 0:
-        labels.loc[IMAGE_NAMES[image_num]]["x"] -= 1
+    elif state == State.EDIT and labels.loc[IMAGE_NAMES[image_num], "x"] > 0:
+        labels.loc[IMAGE_NAMES[image_num], "x"] -= 1
 
 def right_key_callback():
     """Executes upon press of right key"""
     global image_num, state, IMAGES_TOTAL_NUM, IMAGE_NAMES, labels
     if state == State.BROWSE and image_num < IMAGES_TOTAL_NUM - 1:
         image_num += 1
-    elif state == State.EDIT and labels.loc[IMAGE_NAMES[image_num]]["x"] < IMAGE_SIZE - 1:
-        labels.loc[IMAGE_NAMES[image_num]]["x"] += 1
+    elif state == State.EDIT and labels.loc[IMAGE_NAMES[image_num], "x"] < IMAGE_SIZE - 1:
+        labels.loc[IMAGE_NAMES[image_num], "x"] += 1
 
 def up_key_callback():
     """Executes upon press of up key"""
     global image_num, state, IMAGE_NAMES, labels
-    if state == State.EDIT and labels.loc[IMAGE_NAMES[image_num]]["y"] > 0:
-        labels.loc[IMAGE_NAMES[image_num]]["y"] -= 1
+    if state == State.EDIT and labels.loc[IMAGE_NAMES[image_num], "y"] > 0:
+        labels.loc[IMAGE_NAMES[image_num], "y"] -= 1
 
 def down_key_callback():
     """Executes upon press of down key"""
     global image_num, state, IMAGE_NAMES, labels
-    if state == State.EDIT and labels.loc[IMAGE_NAMES[image_num]]["y"] < IMAGE_SIZE - 1:
-        labels.loc[IMAGE_NAMES[image_num]]["y"] += 1
+    if state == State.EDIT and labels.loc[IMAGE_NAMES[image_num], "y"] < IMAGE_SIZE - 1:
+        labels.loc[IMAGE_NAMES[image_num], "y"] += 1
 
 def enter_key_callback():
     """Executes upon press of enter key"""
-    global state
+    global image_num, state, IMAGE_NAMES, labels
     if state == State.BROWSE:
         state = State.EDIT
+        labels.loc[IMAGE_NAMES[image_num], "labeled"] = True
     elif state == State.EDIT:
         state = State.BROWSE
 
@@ -136,6 +137,7 @@ def main():
     labels = pd.DataFrame([0 for i, _ in enumerate(IMAGE_NAMES)], columns=["angle"])
     labels = labels.assign(x=[IMAGE_SIZE // 2 for i, _ in enumerate(IMAGE_NAMES)])
     labels = labels.assign(y=[0 for i, _ in enumerate(IMAGE_NAMES)])
+    labels = labels.assign(labeled=[False for i, _ in enumerate(IMAGE_NAMES)])
     labels.index = IMAGE_NAMES
 
     left_key = Key("left", left_key_callback)
@@ -143,6 +145,8 @@ def main():
     up_key = Key("up", up_key_callback)
     down_key = Key("down", down_key_callback)
     enter_key = Key("enter", enter_key_callback)
+
+    ROBOT = {"x": IMAGE_SIZE//2, "y": IMAGE_SIZE - 1}
 
     try:
         while True:
@@ -161,12 +165,23 @@ def main():
             down_key.trigger_callback()
             enter_key.trigger_callback()
 
-            image_draw = cv2.circle(images[IMAGE_NAMES[image_num]].copy(),
-                                    (labels.loc[IMAGE_NAMES[image_num]]["x"],
-                                     labels.loc[IMAGE_NAMES[image_num]]["y"]),
-                                    radius=2, color=(0, 255, 0), thickness=-1)
+            if labels.loc[IMAGE_NAMES[image_num], "labeled"]:
+                image_draw = cv2.circle(images[IMAGE_NAMES[image_num]].copy(),
+                                        (labels.loc[IMAGE_NAMES[image_num], "x"],
+                                        labels.loc[IMAGE_NAMES[image_num], "y"]),
+                                        radius=2, color=(0, 255, 0), thickness=-1)
+                image_draw = cv2.line(image_draw,
+                                    (labels.loc[IMAGE_NAMES[image_num], "x"],
+                                    labels.loc[IMAGE_NAMES[image_num], "y"]),
+                                    (ROBOT["x"], ROBOT["y"]),
+                                    color=(0, 255, 0), thickness=1)
 
-            cv2.imshow("image", cv2.resize(image_draw, (IMAGE_SIZE * 2, IMAGE_SIZE * 2)))
+                cv2.imshow("image", cv2.resize(image_draw, (IMAGE_SIZE * 2, IMAGE_SIZE * 2)))
+
+            else:
+                cv2.imshow("image", cv2.resize(images[IMAGE_NAMES[image_num]],
+                                               (IMAGE_SIZE* 2, IMAGE_SIZE* 2)))
+
             multi_wrapper.Packages.check_for_quit_request()
 
     except multi_wrapper.Packages.Break:
