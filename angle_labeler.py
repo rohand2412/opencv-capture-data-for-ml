@@ -3,7 +3,7 @@ import cv2
 import enum
 import numpy as np
 import pandas as pd
-from raspberry_pi_libraries import multi_wrapper
+from angle_labeler_utils import AngleLabeler
 
 LABELS_PATH = None
 IMAGES_DIR = None
@@ -23,7 +23,7 @@ class Key:
     def __init__(self, name, callback):
         self._name = name
         self._callback = callback
-        self._state = multi_wrapper.Packages.KEYBOARD_RELEASED_STATE
+        self._state = AngleLabeler.KEYBOARD_RELEASED_STATE
         self._action_type = None
         self._tap_status = None
 
@@ -35,13 +35,13 @@ class Key:
 
     def trigger_callback(self):
         """Update tap status and trigger callback"""
-        if self._state == multi_wrapper.Packages.KEYBOARD_PRESSED_STATE:
-            if self._action_type == multi_wrapper.Packages.KEYBOARD_ACTION_TYPE_TAP and not self._tap_status:
+        if self._state == AngleLabeler.KEYBOARD_PRESSED_STATE:
+            if self._action_type == AngleLabeler.KEYBOARD_ACTION_TYPE_TAP and not self._tap_status:
                 self._callback()
                 self._tap_status = True
-            elif self._action_type == multi_wrapper.Packages.KEYBOARD_ACTION_TYPE_HOLD:
+            elif self._action_type == AngleLabeler.KEYBOARD_ACTION_TYPE_HOLD:
                 self._callback()
-        elif self._state == multi_wrapper.Packages.KEYBOARD_RELEASED_STATE:
+        elif self._state == AngleLabeler.KEYBOARD_RELEASED_STATE:
             self._tap_status = False
 
     def set_state(self, new_state):
@@ -155,13 +155,16 @@ def main():
     global image_num, state, labels, LABELS_PATH, IMAGES_DIR, \
            IMAGES_TOTAL_NUM, IMAGE_SIZE, IMAGE_NAMES, SHOW_ANGLE, ROBOT
 
-    LABELS_PATH = "/home/rohan/Documents/RCJ2021Repos/raspberry-pi-images-rcj/Line/Final-Labels/labels.csv"
-    IMAGES_DIR = "/home/rohan/Documents/RCJ2021Repos/raspberry-pi-images-rcj/Line-Squares/Final-Images/"
+    AngleLabeler.InitBashArgs()
+    args = AngleLabeler.InitBashArgs.get_args()
 
-    keyboard = multi_wrapper.Packages.Keyboard()
+    LABELS_PATH = args.labels_path
+    IMAGES_DIR = args.images_dir
+
+    keyboard = AngleLabeler.Keyboard()
     keyboard.start()
 
-    IMAGE_NAMES = multi_wrapper.Packages.Dataset.get_ordered_path(IMAGES_DIR)
+    IMAGE_NAMES = AngleLabeler.Dataset.get_ordered_path(IMAGES_DIR)
     image_file_ext = os.path.splitext(os.listdir(IMAGES_DIR)[0])[1]
 
     images = {}
@@ -273,9 +276,9 @@ def main():
                 cv2.imshow("image", cv2.resize(images[IMAGE_NAMES[image_num]],
                                                (IMAGE_SIZE* 2, IMAGE_SIZE* 2)))
 
-            multi_wrapper.Packages.check_for_quit_request()
+            AngleLabeler.check_for_quit_request()
 
-    except multi_wrapper.Packages.Break:
+    except AngleLabeler.Break:
         cv2.destroyAllWindows()
         labels.to_csv(LABELS_PATH)
 
