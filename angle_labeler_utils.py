@@ -15,6 +15,8 @@ class AngleLabeler(multi_wrapper.Packages):
                                      help="path to labels.csv")
             cls._parser.add_argument("--images-dir", default=None, type=str,
                                      help="directory with images to label")
+            cls._parser.add_argument("--sensitivity", default=1, type=int,
+                                     help="sensitivity of arrow key movements")
 
         @classmethod
         def get_args(cls):
