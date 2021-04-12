@@ -11,6 +11,7 @@ IMAGES_TOTAL_NUM = None
 IMAGE_SIZE = None
 IMAGE_NAMES = None
 SHOW_ANGLE = True
+SHOW_NUM = True
 ROBOT = None
 
 class State(enum.Enum):
@@ -163,10 +164,15 @@ def shift_key_callback(_):
     global SHOW_ANGLE
     SHOW_ANGLE = not SHOW_ANGLE
 
+def ctrl_key_callback(_):
+    """Executes upon press of ctrl key"""
+    global SHOW_NUM
+    SHOW_NUM = not SHOW_NUM
+
 def main():
     """Main code"""
     global image_num, state, labels, args, LABELS_PATH, IMAGES_DIR, \
-           IMAGES_TOTAL_NUM, IMAGE_SIZE, IMAGE_NAMES, SHOW_ANGLE, ROBOT
+           IMAGES_TOTAL_NUM, IMAGE_SIZE, IMAGE_NAMES, SHOW_ANGLE, SHOW_NUM, ROBOT
 
     AngleLabeler.InitBashArgs()
     args = AngleLabeler.InitBashArgs.get_args()
@@ -222,6 +228,8 @@ def main():
     e_key = Key("e", backspace_key_callback)
     shift_key = Key("shift", shift_key_callback)
     shift_right_key = Key("shift_r", shift_key_callback)
+    ctrl_left_key = Key("ctrl_l", ctrl_key_callback)
+    ctrl_right_key = Key("ctrl_r", ctrl_key_callback)
 
     try:
         while True:
@@ -242,6 +250,8 @@ def main():
                 e_key.update(event)
                 shift_key.update(event)
                 shift_right_key.update(event)
+                ctrl_left_key.update(event)
+                ctrl_right_key.update(event)
 
             left_key.trigger_callback()
             right_key.trigger_callback()
@@ -257,6 +267,8 @@ def main():
             e_key.trigger_callback()
             shift_key.trigger_callback()
             shift_right_key.trigger_callback()
+            ctrl_left_key.trigger_callback()
+            ctrl_right_key.trigger_callback()
 
             if not IMAGE_NAMES[image_num] in images:
                 images[IMAGE_NAMES[image_num]] = cv2.imread(IMAGES_DIR + IMAGE_NAMES[image_num] + image_file_ext)
@@ -271,17 +283,32 @@ def main():
                                     labels.loc[IMAGE_NAMES[image_num], "y"]),
                                     (ROBOT["x"], ROBOT["y"]),
                                     color=(0, 255, 0), thickness=1)
-                
+
+                x_margin = 5
+                y_margin = 10
+                angle_text_height = 0
                 if SHOW_ANGLE:
-                    ((width, height), baseline) = cv2.getTextSize(text="angle: " + str(labels.loc[IMAGE_NAMES[image_num], "angle"]),
-                                                                  fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-                                                                  fontScale=0.5, thickness=1)
+                    ((width, angle_text_height), baseline) = cv2.getTextSize(text="angle: " + str(labels.loc[IMAGE_NAMES[image_num], "angle"]),
+                                                                             fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                                                                             fontScale=0.5, thickness=1)
 
                     image_draw = cv2.putText(image_draw,
                                              text="angle: " + str(labels.loc[IMAGE_NAMES[image_num], "angle"]),
-                                             org=(IMAGE_SIZE - width, IMAGE_SIZE - height + baseline), fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-                                             fontScale=0.5, color=(0, 255, 0), thickness=1,
-                                             lineType=cv2.LINE_AA)
+                                             org=(IMAGE_SIZE - width - x_margin, IMAGE_SIZE - angle_text_height + baseline),
+                                             fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.5,
+                                             color=(0, 255, 0), thickness=1, lineType=cv2.LINE_AA)
+                    angle_text_height += y_margin
+
+                if SHOW_NUM:
+                    ((width, height), baseline) = cv2.getTextSize(text="image #" + ''.join(filter(str.isdigit, IMAGE_NAMES[image_num])),
+                                                                  fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                                                                  fontScale=0.4, thickness=1)
+
+                    image_draw = cv2.putText(image_draw,
+                                             text="image #" + ''.join(filter(str.isdigit, IMAGE_NAMES[image_num])),
+                                             org=(IMAGE_SIZE - width - x_margin, IMAGE_SIZE - height + baseline - angle_text_height),
+                                             fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.4,
+                                             color=(0, 255, 0), thickness=1, lineType=cv2.LINE_AA)
 
                 cv2.imshow("image", cv2.resize(image_draw, (IMAGE_SIZE * 2, IMAGE_SIZE * 2)))
 
