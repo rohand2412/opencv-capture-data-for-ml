@@ -37,10 +37,10 @@ class Key:
         """Update tap status and trigger callback"""
         if self._state == AngleLabeler.KEYBOARD_PRESSED_STATE:
             if self._action_type == AngleLabeler.KEYBOARD_ACTION_TYPE_TAP and not self._tap_status:
-                self._callback()
+                self._callback(self._action_type)
                 self._tap_status = True
             elif self._action_type == AngleLabeler.KEYBOARD_ACTION_TYPE_HOLD:
-                self._callback()
+                self._callback(self._action_type)
         elif self._state == AngleLabeler.KEYBOARD_RELEASED_STATE:
             self._tap_status = False
 
@@ -75,6 +75,7 @@ class Key:
 image_num = 0
 state = State.BROWSE
 labels = None
+args = None
 
 def compute_angle():
     global image_num, IMAGE_NAMES, labels, ROBOT
@@ -94,39 +95,51 @@ def compute_angle():
 
     labels.loc[IMAGE_NAMES[image_num], "angle"] = angle
 
-def left_key_callback():
+def left_key_callback(action_type):
     """Executes upon press of left key"""
     global image_num, state, IMAGE_NAMES, labels
     if state == State.BROWSE and image_num > 0:
         image_num -= 1
     elif state == State.EDIT and labels.loc[IMAGE_NAMES[image_num], "x"] > 0:
-        labels.loc[IMAGE_NAMES[image_num], "x"] -= 1
+        if action_type == AngleLabeler.KEYBOARD_ACTION_TYPE_HOLD:
+            labels.loc[IMAGE_NAMES[image_num], "x"] -= args.sensitivity
+        elif action_type == AngleLabeler.KEYBOARD_ACTION_TYPE_TAP:
+            labels.loc[IMAGE_NAMES[image_num], "x"] -= 1
         compute_angle()
 
-def right_key_callback():
+def right_key_callback(action_type):
     """Executes upon press of right key"""
     global image_num, state, IMAGES_TOTAL_NUM, IMAGE_NAMES, labels
     if state == State.BROWSE and image_num < IMAGES_TOTAL_NUM - 1:
         image_num += 1
     elif state == State.EDIT and labels.loc[IMAGE_NAMES[image_num], "x"] < IMAGE_SIZE - 1:
-        labels.loc[IMAGE_NAMES[image_num], "x"] += 1
+        if action_type == AngleLabeler.KEYBOARD_ACTION_TYPE_HOLD:
+            labels.loc[IMAGE_NAMES[image_num], "x"] += args.sensitivity
+        elif action_type == AngleLabeler.KEYBOARD_ACTION_TYPE_TAP:
+            labels.loc[IMAGE_NAMES[image_num], "x"] += 1
         compute_angle()
 
-def up_key_callback():
+def up_key_callback(action_type):
     """Executes upon press of up key"""
     global image_num, state, IMAGE_NAMES, labels
     if state == State.EDIT and labels.loc[IMAGE_NAMES[image_num], "y"] > 0:
-        labels.loc[IMAGE_NAMES[image_num], "y"] -= 1
+        if action_type == AngleLabeler.KEYBOARD_ACTION_TYPE_HOLD:
+            labels.loc[IMAGE_NAMES[image_num], "y"] -= args.sensitivity
+        elif action_type == AngleLabeler.KEYBOARD_ACTION_TYPE_TAP:
+            labels.loc[IMAGE_NAMES[image_num], "y"] -= 1
         compute_angle()
 
-def down_key_callback():
+def down_key_callback(action_type):
     """Executes upon press of down key"""
     global image_num, state, IMAGE_NAMES, labels
     if state == State.EDIT and labels.loc[IMAGE_NAMES[image_num], "y"] < IMAGE_SIZE - 1:
-        labels.loc[IMAGE_NAMES[image_num], "y"] += 1
+        if action_type == AngleLabeler.KEYBOARD_ACTION_TYPE_HOLD:
+            labels.loc[IMAGE_NAMES[image_num], "y"] += args.sensitivity
+        elif action_type == AngleLabeler.KEYBOARD_ACTION_TYPE_TAP:
+            labels.loc[IMAGE_NAMES[image_num], "y"] += 1
         compute_angle()
 
-def enter_key_callback():
+def enter_key_callback(_):
     """Executes upon press of enter key"""
     global image_num, state, IMAGE_NAMES, labels
     if state == State.BROWSE:
@@ -135,7 +148,7 @@ def enter_key_callback():
     elif state == State.EDIT:
         state = State.BROWSE
 
-def backspace_key_callback():
+def backspace_key_callback(_):
     """Executes upon press of backspace key"""
     global image_num, state, IMAGE_NAMES, labels
     if state == State.EDIT:
@@ -145,14 +158,14 @@ def backspace_key_callback():
         labels.loc[IMAGE_NAMES[image_num], "y"] = 0
         labels.loc[IMAGE_NAMES[image_num], "labeled"] = False
 
-def shift_key_callback():
+def shift_key_callback(_):
     """Executes upon press of shift key"""
     global SHOW_ANGLE
     SHOW_ANGLE = not SHOW_ANGLE
 
 def main():
     """Main code"""
-    global image_num, state, labels, LABELS_PATH, IMAGES_DIR, \
+    global image_num, state, labels, args, LABELS_PATH, IMAGES_DIR, \
            IMAGES_TOTAL_NUM, IMAGE_SIZE, IMAGE_NAMES, SHOW_ANGLE, ROBOT
 
     AngleLabeler.InitBashArgs()
