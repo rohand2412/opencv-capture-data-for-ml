@@ -11,7 +11,7 @@ from raspberry_pi_libraries import multi_wrapper, camera_wrapper
 
 def main():
     """Main code"""
-    model_path = "/home/pi/Documents/raspberry-pi-images-rcj/Line/Model-Data/GlobAvgPool-0-dense-0.4-dropout-32-nodes-full-int.tflite"
+    model_path = "/home/pi/Documents/raspberry-pi-images-rcj/Line/Model-Data/sequential-1619072161.tflite"
 
     interpreter = tflite.Interpreter(model_path=model_path)
     interpreter.allocate_tensors()
@@ -36,8 +36,7 @@ def main():
             image = cv2.resize(image, (input_width, input_height))
             image = cv2.flip(image, -1)
 
-            image_input = np.expand_dims(image, axis=0)
-            image_input = np.round(image_input).astype(np.float32)
+            image_input = np.expand_dims(image, axis=0).astype(np.float32)
 
             interpreter.set_tensor(input_details[0]['index'], image_input)
             interpreter.invoke()
