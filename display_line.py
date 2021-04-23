@@ -38,6 +38,8 @@ def main():
 
             image_input = np.expand_dims(image, axis=0).astype(np.float32)
 
+            image_input = image_input/255.0
+
             interpreter.set_tensor(input_details[0]['index'], image_input)
             interpreter.invoke()
 
@@ -55,7 +57,7 @@ def main():
 
             image = cv2.line(image, (input_width//2, input_height), (int(x_coord), y_coord), thickness=1, color=(0, 255, 0))
 
-            image = cv2.resize(image, (input_width * 2, input_height * 2))
+            image = cv2.resize(image, (input_width * 8, input_height * 8))
 
             cv2.imshow("image", image)
             
