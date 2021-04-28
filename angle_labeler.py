@@ -148,6 +148,7 @@ def enter_key_callback(_):
         labels.loc[IMAGE_NAMES[image_num], "labeled"] = True
     elif state == State.EDIT:
         state = State.BROWSE
+        labels.to_csv(LABELS_PATH)
 
 def backspace_key_callback(_):
     """Executes upon press of backspace key"""
@@ -320,7 +321,6 @@ def main():
 
     except AngleLabeler.Break:
         cv2.destroyAllWindows()
-        labels.to_csv(LABELS_PATH)
 
 if __name__ == '__main__':
     main()
