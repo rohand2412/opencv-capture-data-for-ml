@@ -21,7 +21,7 @@ def main():
 
     _, input_height, input_width, _ = input_details[0]['shape']
 
-    frame = camera_wrapper.Packages.Frame("Cam")
+    frame = camera_wrapper.Packages.Frame("Cam", img_format="rgb")
 
     try:
         while True:
@@ -45,7 +45,7 @@ def main():
 
             output = interpreter.get_tensor(output_details[0]['index'])[0][0]
 
-            print(output)
+            print(round(output))
 
             image = cv2.resize(image, (input_width * 4, input_height * 4))
 
