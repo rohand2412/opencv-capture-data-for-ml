@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""This script will filter the data by division and export it"""
+"""This script will convert data from bgr to rgb"""
 
 import cv2
 from bgr_to_rgb_utils import BgrToRgb
