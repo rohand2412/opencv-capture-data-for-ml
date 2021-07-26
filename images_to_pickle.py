@@ -19,11 +19,12 @@ def main():
     images = [None for image in os.listdir(images_dir)]
 
     for i, filename in enumerate(ImagesToPickle.Dataset.get_ordered_path(images_dir)):
-        images[i] = cv2.imread(images_dir + filename)
-        images[i] = cv2.cvtColor(images[i], cv2.COLOR_BGR2RGB)
-        images[i] = cv2.resize(images[i], (image_size, image_size))
+        if os.path.splitext(filename)[1] == '.png':
+            images[i] = cv2.imread(images_dir + filename)
+            images[i] = cv2.cvtColor(images[i], cv2.COLOR_BGR2RGB)
+            images[i] = cv2.resize(images[i], (640, 360))
 
-    images = np.array(images).reshape(-1, image_size, image_size, 3)
+    images = np.array(images).reshape(-1, 640, 360, 3)
 
     pickle_out = open(save_dir + "images.pickle", "wb")
     pickle.dump(images, pickle_out)
