@@ -11,7 +11,7 @@ from raspberry_pi_libraries import multi_wrapper, camera_wrapper
 
 def main():
     """Main code"""
-    model_path = "/home/pi/Documents/raspberry-pi-images-rcj/Silver/Model-Data/quant-default-1621825242.tflite"
+    model_path = "/path/to/model.tflite"
 
     interpreter = tflite.Interpreter(model_path=model_path)
     interpreter.allocate_tensors()
