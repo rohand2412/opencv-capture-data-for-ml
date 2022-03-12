@@ -6,7 +6,7 @@ This is a collection of data manipulation scripts for formatting and managing la
 
 The following instructions will get you completely set up:
 
-1. This repository depends on `raspberry_pi_libraries`, install it [here]().
+1. This repository depends on `raspberry_pi_libraries`, install it [here](https://gitlab.com/rohand2412/raspberry_pi_libraries).
 
 2. Clone this repository into the desired directory.
 
